@@ -2,7 +2,7 @@ import boto3
 import json
 from core.enums import Severity, CloudProvider, FindingType
 
-class S3Scanner():
+class S3Scanner():  
     def __init__(self, profile_name=None):
         self.findings = []
 
@@ -25,7 +25,7 @@ class S3Scanner():
                 self.check_encryption(bucket_name)
         except:
             pass
-        
+
         return self.findings
 
     def check_public_access(self, bucket_name):
