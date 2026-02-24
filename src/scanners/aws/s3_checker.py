@@ -95,7 +95,7 @@ class S3Scanner():
             policy = json.loads(response["Policy"])
             statements = policy["Statement"]
             for statement in statements:
-                if statement["Effect"] == 'Allow' and statement['Principal'] == '*' or statement['Principal'] == {'AWS': '*'}:
+                if statement["Effect"] == 'Allow' and (statement['Principal'] == '*' or statement['Principal'] == {'AWS': '*'}):
                     self.findings.append({
                         "severity" : Severity.CRITICAL.value,
                         "title" : "Public S3 Bucket via Policy",

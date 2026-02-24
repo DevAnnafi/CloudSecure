@@ -24,15 +24,22 @@ def test_s3_encryption_finding():
         assert scanner.findings[0]["severity"] == "medium"
 
 def test_s3_no_finding_when_secure():
-    with patch('scanners.aws.s3_checker.boto3.client') as mock_boto:
-        mock_boto.return_value.get_public_access_block.return_value = {
-        'PublicAccessBlockConfiguration': {
-        'BlockPublicAcls': True,
-        'IgnorePublicAcls': True,
-        'BlockPublicPolicy': True,
-        'RestrictPublicBuckets': True
-    }
+    with patch('scanners.aws.s3_checker.boto3.Session') as mock_session:
+        mock_s3 = MagicMock()
+        mock_s3.get_public_access_block.return_value = {
+            'PublicAccessBlockConfiguration': {
+                'BlockPublicAcls': True,
+                'IgnorePublicAcls': True,
+                'BlockPublicPolicy': True,
+                'RestrictPublicBuckets': True
+            }
         }
+        
+        mock_sts = MagicMock()
+        mock_sts.get_caller_identity.return_value = {'Account': '123456789012'}
+    
+        mock_session.return_value.client.side_effect = lambda service: mock_sts if service == 'sts' else mock_s3
+        
         scanner = S3Scanner()
         scanner.check_public_access("fake-bucket")
         assert len(scanner.findings) == 0
