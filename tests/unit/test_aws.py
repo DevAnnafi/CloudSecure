@@ -45,9 +45,9 @@ def test_s3_no_finding_when_secure():
         assert len(scanner.findings) == 0
 
 def test_s3_policy_public_star_principal():
-    with patch('scanners.aws.s3_checker.boto3.client') as mock_boto:
-        mock_client = mock_boto.return_value
-
+    with patch('scanners.aws.s3_checker.boto3.Session') as mock_session:
+        mock_s3 = MagicMock()
+        
         public_policy = {
             "Statement": [
                 {
@@ -56,23 +56,28 @@ def test_s3_policy_public_star_principal():
                 }
             ]
         }
-
-        mock_client.get_bucket_policy.return_value = {
+        
+        mock_s3.get_bucket_policy.return_value = {
             "Policy": json.dumps(public_policy)
         }
-
+        
+        mock_sts = MagicMock()
+        mock_sts.get_caller_identity.return_value = {'Account': '123456789012'}
+        
+        mock_session.return_value.client.side_effect = lambda service: mock_sts if service == 'sts' else mock_s3
+        
         scanner = S3Scanner()
         scanner.check_policy("public-bucket")
-
+        
         assert len(scanner.findings) == 1
         assert scanner.findings[0]["title"] == "Public S3 Bucket via Policy"
         assert scanner.findings[0]["resource"] == "public-bucket"
 
 
 def test_s3_policy_public_aws_wildcard():
-    with patch('scanners.aws.s3_checker.boto3.client') as mock_boto:
-        mock_client = mock_boto.return_value
-
+    with patch('scanners.aws.s3_checker.boto3.Session') as mock_session:
+        mock_s3 = MagicMock()
+        
         public_policy = {
             "Statement": [
                 {
@@ -81,16 +86,20 @@ def test_s3_policy_public_aws_wildcard():
                 }
             ]
         }
-
-        mock_client.get_bucket_policy.return_value = {
+        
+        mock_s3.get_bucket_policy.return_value = {
             "Policy": json.dumps(public_policy)
         }
-
+        
+        mock_sts = MagicMock()
+        mock_sts.get_caller_identity.return_value = {'Account': '123456789012'}
+        
+        mock_session.return_value.client.side_effect = lambda service: mock_sts if service == 'sts' else mock_s3
+        
         scanner = S3Scanner()
         scanner.check_policy("public-bucket")
-
+        
         assert len(scanner.findings) == 1
-
 
 def test_s3_policy_private_bucket():
     with patch('scanners.aws.s3_checker.boto3.client') as mock_boto:
