@@ -3,14 +3,26 @@ import json
 from core.enums import Severity, CloudProvider, FindingType
 
 class S3Scanner():  
-    def __init__(self, profile_name=None):
+    def __init__(self, profile_name=None, account_name=None):
+        """
+        Initialize S3 scanner with optional AWS profile.
+        
+        Args:
+            profile_name (str, optional): AWS CLI profile name.
+            account_name (str, optional): Friendly name for this account.
+        """
         self.findings = []
-
-        if profile_name:
-            session = boto3.Session(profile_name=profile_name)
-            self.s3_client = session.client('s3')
-        else:
-            self.s3_client = boto3.client('s3')
+        self.account_name = account_name or "Default"
+        
+        session = boto3.Session(profile_name=profile_name) if profile_name else boto3.Session()
+        self.s3_client = session.client('s3')
+        
+        sts_client = session.client('sts')
+        try:
+            identity = sts_client.get_caller_identity()
+            self.account_id = identity['Account']
+        except:
+            self.account_id = "unknown"
 
 
     def scan_buckets(self):
@@ -40,6 +52,9 @@ class S3Scanner():
                     "severity" : Severity.CRITICAL.value,
                     "title" : "S3 Bucket Not Protected",
                     "resource" : bucket_name,
+                    "cloud_provider": "AWS",              
+                    "account_id": self.account_id,        
+                    "account_name": self.account_name,    
                     "description" : "Block Public Access settings are not fully enabled"
                 })
         except:
@@ -47,6 +62,9 @@ class S3Scanner():
                     "severity" : Severity.CRITICAL.value,
                     "title" : "S3 Bucket Not Protected",
                     "resource" : bucket_name,
+                    "cloud_provider": "AWS",              
+                    "account_id": self.account_id,        
+                    "account_name": self.account_name, 
                     "description" : "Block Public Access settings are not fully enabled"
                 })
 
@@ -63,6 +81,9 @@ class S3Scanner():
                             "severity" : Severity.CRITICAL.value,
                             "title" : "Public S3 Bucket via ACL",
                             "resource" : bucket_name,
+                            "cloud_provider": "AWS",              
+                            "account_id": self.account_id,        
+                            "account_name": self.account_name, 
                             "description" : "Bucket ACL grants public access"
                         })
         except: 
@@ -79,6 +100,9 @@ class S3Scanner():
                         "severity" : Severity.CRITICAL.value,
                         "title" : "Public S3 Bucket via Policy",
                         "resource" : bucket_name,
+                        "cloud_provider": "AWS",              
+                        "account_id": self.account_id,        
+                        "account_name": self.account_name, 
                         "description" : "Bucket policy grants public access"
                     })
         except:
@@ -92,6 +116,9 @@ class S3Scanner():
                 "severity" : Severity.MEDIUM.value,
                 "title" : "S3 Bucket Encryption Disabled",
                 "resource" : bucket_name,
+                "cloud_provider": "AWS",              
+                "account_id": self.account_id,        
+                "account_name": self.account_name, 
                 "description": "Bucket does not have default encryption enabled"
             })
 
