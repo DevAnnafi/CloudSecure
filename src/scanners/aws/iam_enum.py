@@ -3,17 +3,27 @@ import json
 from core.enums import Severity, CloudProvider, FindingType
 
 class IAMScanner():
-    def __init__(self, profile_name=None):
+    def __init__(self, profile_name=None, account_name=None):
+        """
+        Initialize IAM scanner with optional AWS profile.
+        
+        Args:
+            profile_name (str, optional): AWS CLI profile name.
+            account_name (str, optional): Friendly name for this account.
+        """
         self.findings = []
-
-        if profile_name:
-            session = boto3.Session(profile_name=profile_name)
-            self.iam_client = session.client('iam')
-            self.sts_client = session.client('sts')
-        else:
-            self.iam_client = boto3.client('iam')
-            self.sts_client = boto3.client('sts')
-
+        self.account_name = account_name or "Default"
+        
+        session = boto3.Session(profile_name=profile_name) if profile_name else boto3.Session()
+        self.sts_client = session.client('sts')
+        self.iam_client = session.client('iam')
+        
+        # Get account ID
+        try:
+            identity = self.sts_client.get_caller_identity()
+            self.account_id = identity['Account']
+        except:
+            self.account_id = "unknown"
     def scan(self):
         try:
             response = self.sts_client.get_caller_identity()
@@ -78,6 +88,9 @@ class IAMScanner():
                 "severity" : Severity.CRITICAL.value,
                 "title" : "IAM Privilege Escalation - CreateAccessKey",
                 "resource" : "Current User",
+                "cloud_provider": "AWS",
+                "account_id": self.account_id,
+                "account_name": self.account_name,          
                 "description" : "User has iam:CreateAccessKey permission, can create keys for other users"
             })
        
@@ -87,6 +100,9 @@ class IAMScanner():
                 "severity" : Severity.CRITICAL.value,
                 "title" : "IAM Privilege Escalation - AttachUserPolicy",
                 "resource" : "Current User",
+                "cloud_provider": "AWS",
+                "account_id": self.account_id,
+                "account_name": self.account_name,
                 "description" : "User has iam:AttachUserPolicy permission, can attach admin policies to themselves"
             })
 
@@ -96,6 +112,9 @@ class IAMScanner():
                 "severity" : Severity.CRITICAL.value,
                 "title" : "IAM Privilege Escalation - PutUserPolicy",
                 "resource" : "Current User",
+                "cloud_provider": "AWS",
+                "account_id": self.account_id,
+                "account_name": self.account_name,
                 "description" : "User has iam:PutUserPolicy permission, can create inline policies with admin privileges"
             })
 
@@ -105,6 +124,9 @@ class IAMScanner():
                 "severity" : Severity.CRITICAL.value,
                 "title": "IAM Privilege Escalation - PassRole + Lambda",
                 "resource" : "Current User",
+                "cloud_provider": "AWS",
+                "account_id": self.account_id,
+                "account_name": self.account_name,
                 "description" : "User has iam:PassRole and lambda:CreateFunction permissions, can assume privileged roles via Lambda"
             })
 
@@ -114,6 +136,9 @@ class IAMScanner():
                 "severity" : Severity.CRITICAL.value,
                 "title" : "IAM Privilege Escalation - AttachGroupPolicy",
                 "resource" : "Current User",
+                "cloud_provider": "AWS",
+                "account_id": self.account_id,
+                "account_name": self.account_name,
                 "description" : "User has iam:AttachGroupPolicy permissions, can attach admin policies to groups"
             })
 
@@ -123,6 +148,9 @@ class IAMScanner():
                 "severity" : Severity.CRITICAL.value,
                 "title" : "IAM Privilege Escalation - AttachRolePolicy",
                 "resource" : "Current User",
+                "cloud_provider": "AWS",
+                "account_id": self.account_id,
+                "account_name": self.account_name,
                 "description" : "User has iam:AttachRolePolicy permissions, can attach admin policies to roles"
             })
 
@@ -132,6 +160,9 @@ class IAMScanner():
                 "severity" : Severity.CRITICAL.value,
                 "title" : "IAM Privilege Escalation - PutGroupPolicy",
                 "resource" : "Current User",
+                "cloud_provider": "AWS",
+                "account_id": self.account_id,
+                "account_name": self.account_name,
                 "description" : "User has iam:PutGroupPolicy permissions, can create inline policies on groups"
             })
 
@@ -141,6 +172,9 @@ class IAMScanner():
                 "severity" : Severity.CRITICAL.value,
                 "title" : "IAM Privilege Escalation - PutRolePolicy",
                 "resource" : "Current User",
+                "cloud_provider": "AWS",
+                "account_id": self.account_id,
+                "account_name": self.account_name,
                 "description" : "User has iam:PutRolePolicy permissions, can create inline policies to roles"
             })
 
@@ -150,6 +184,9 @@ class IAMScanner():
                 "severity" : Severity.CRITICAL.value,
                 "title" : "IAM Privilege Escalation - CreatePolicy",
                 "resource" : "Current User",
+                "cloud_provider": "AWS",
+                "account_id": self.account_id,
+                "account_name": self.account_name,
                 "description" : "User has iam:CreatePolicy permissions, can create new admin policies"
             })
 
@@ -159,6 +196,9 @@ class IAMScanner():
                 "severity" : Severity.CRITICAL.value,
                 "title" : "IAM Privilege Escalation - CreateLoginProfile",
                 "resource" : "Current User",
+                "cloud_provider": "AWS",
+                "account_id": self.account_id,
+                "account_name": self.account_name,
                 "description" : "User has iam:CreateLoginProfile permissions, can create console passwords for other users"
             })
     
@@ -169,6 +209,9 @@ class IAMScanner():
                 "severity" : Severity.CRITICAL.value,
                 "title" : "IAM Privilege Escalation - UpdateLoginProfile",
                 "resource" : "Current User",
+                "cloud_provider": "AWS",
+                "account_id": self.account_id,
+                "account_name": self.account_name,
                 "description" : "User has iam:UpdateLoginProfile permissions, can change console passwords for other users"
             })
 
@@ -178,6 +221,9 @@ class IAMScanner():
                 "severity" : Severity.CRITICAL.value,
                 "title" : "IAM Privilege Escalation - SetDefaultPolicyVersion",
                 "resource" : "Current User",
+                "cloud_provider": "AWS",
+                "account_id": self.account_id,
+                "account_name": self.account_name,
                 "description" : "User has iam:SetDefaultPolicyVersion permission, can revert policies to privileged versions"
             })
 
@@ -187,6 +233,9 @@ class IAMScanner():
                 "severity" : Severity.CRITICAL.value,
                 "title" : "IAM Privilege Escalation - PassRole + EC2",
                 "resource" : "Current User",
+                "cloud_provider": "AWS",
+                "account_id": self.account_id,
+                "account_name": self.account_name,
                 "description" : "User has iam:PassRole and ec2:RunInstances permissions, can launch EC2 instances with privileged roles"
             })
 
@@ -196,6 +245,9 @@ class IAMScanner():
                 "severity" : Severity.CRITICAL.value,
                 "title" : "IAM Privilege Escalation - PassRole and Cloudformation",
                 "resource" : "Current User",
+                "cloud_provider": "AWS",
+                "account_id": self.account_id,
+                "account_name": self.account_name,
                 "description" : "User has iam:PassRole and cloudformation:CreateStack permissions, can create stacks with privileged roles"
             }) 
 
@@ -205,6 +257,9 @@ class IAMScanner():
                 "severity" : Severity.CRITICAL.value,
                 "title" : "IAM Privilege Escalation - PassRole and Datapipeline",
                 "resource" : "Current User",
+                "cloud_provider": "AWS",
+                "account_id": self.account_id,
+                "account_name": self.account_name,
                 "description" : "User has iam:PassRole and datapipeline:CreatePipeline permissions, can create pipelines with privileged roles"
             })
 
@@ -214,6 +269,9 @@ class IAMScanner():
                 "severity" : Severity.CRITICAL.value,
                 "title" : "IAM Privilege Escalation - PassRole + Glue",
                 "resource" : "Current User",
+                "cloud_provider": "AWS",
+                "account_id": self.account_id,
+                "account_name": self.account_name,
                 "description" : "User has iam:PassRole and glue:CreateDevEndpoint permissions, can create Glue endpoints with privileged roles"              
             })
 
@@ -223,6 +281,9 @@ class IAMScanner():
                 "severity" : Severity.CRITICAL.value,
                 "title" : "IAM Privilege Escalation - AssumeRole",
                 "resource" : "Current User",
+                "cloud_provider": "AWS",
+                "account_id": self.account_id,
+                "account_name": self.account_name,
                 "description" : "User has sts:AssumeRole permission, can assume privileged roles"
             })
     
@@ -232,6 +293,9 @@ class IAMScanner():
                 "severity" : Severity.CRITICAL.value,
                 "title" : "IAM Privilege Escalation - InvokeFunction",
                 "resource" : "Current User",
+                "cloud_provider": "AWS",
+                "account_id": self.account_id,
+                "account_name": self.account_name,
                 "description" : "User has lambda:InvokeFunction permission, can invoke Lambda functions with privileged roles"
             })
 
@@ -241,6 +305,9 @@ class IAMScanner():
                 "severity" : Severity.CRITICAL.value,
                 "title" : "IAM Privilege Escalation - RunInstances",
                 "resource" : "Current User",
+                "cloud_provider": "AWS",
+                "account_id": self.account_id,
+                "account_name": self.account_name,
                 "description" : "User has ec2:RunInstances permission, can launch instances with instance profiles"          
             })
 
@@ -250,6 +317,9 @@ class IAMScanner():
                 "severity" : Severity.CRITICAL.value,
                 "title" : "IAM Privilege Escalation - Wildcard Permissions",
                 "resource" : "Current User",
+                "cloud_provider": "AWS",
+                "account_id": self.account_id,
+                "account_name": self.account_name,
                 "description" : "User has wildcard permissions, grants excessive privileges"                  
             })
 
