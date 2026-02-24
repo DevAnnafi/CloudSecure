@@ -3,6 +3,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent.parent.parent / "src"))
 
 import pytest
+import json
 from unittest.mock import patch, MagicMock
 from scanners.aws.s3_checker import S3Scanner
 
@@ -34,4 +35,86 @@ def test_s3_no_finding_when_secure():
         }
         scanner = S3Scanner()
         scanner.check_public_access("fake-bucket")
+        assert len(scanner.findings) == 0
+
+def test_s3_policy_public_star_principal():
+    with patch("boto3.client") as mock_boto:
+        mock_client = mock_boto.return_value
+
+        public_policy = {
+            "Statement": [
+                {
+                    "Effect": "Allow",
+                    "Principal": "*"
+                }
+            ]
+        }
+
+        mock_client.get_bucket_policy.return_value = {
+            "Policy": json.dumps(public_policy)
+        }
+
+        scanner = S3Scanner()
+        scanner.check_policy("public-bucket")
+
+        assert len(scanner.findings) == 1
+        assert scanner.findings[0]["title"] == "Public S3 Bucket via Policy"
+        assert scanner.findings[0]["resource"] == "public-bucket"
+
+
+def test_s3_policy_public_aws_wildcard():
+    with patch("boto3.client") as mock_boto:
+        mock_client = mock_boto.return_value
+
+        public_policy = {
+            "Statement": [
+                {
+                    "Effect": "Allow",
+                    "Principal": {"AWS": "*"}
+                }
+            ]
+        }
+
+        mock_client.get_bucket_policy.return_value = {
+            "Policy": json.dumps(public_policy)
+        }
+
+        scanner = S3Scanner()
+        scanner.check_policy("public-bucket")
+
+        assert len(scanner.findings) == 1
+
+
+def test_s3_policy_private_bucket():
+    with patch("boto3.client") as mock_boto:
+        mock_client = mock_boto.return_value
+
+        private_policy = {
+            "Statement": [
+                {
+                    "Effect": "Allow",
+                    "Principal": {"AWS": "arn:aws:iam::123456789012:root"}
+                }
+            ]
+        }
+
+        mock_client.get_bucket_policy.return_value = {
+            "Policy": json.dumps(private_policy)
+        }
+
+        scanner = S3Scanner()
+        scanner.check_policy("private-bucket")
+
+        assert len(scanner.findings) == 0
+
+
+def test_s3_policy_no_policy_exception():
+    with patch("boto3.client") as mock_boto:
+        mock_client = mock_boto.return_value
+        mock_client.get_bucket_policy.side_effect = Exception("No policy")
+
+        scanner = S3Scanner()
+        scanner.check_policy("no-policy-bucket")
+
+        # Should silently ignore
         assert len(scanner.findings) == 0
