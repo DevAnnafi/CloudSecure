@@ -49,6 +49,7 @@ reports/*
 logs/*
 !logs/.gitkeep
 *.log
+*.json
 
 # OS
 .DS_Store
