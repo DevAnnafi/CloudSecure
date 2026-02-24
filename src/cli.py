@@ -1,5 +1,7 @@
 import argparse
 from scanners.aws import S3Scanner, IAMScanner, EC2MetaDataScanner
+from scanners.azure import MetaDataProbe, StorageChecker, RBACAnalyzer
+import subprocess
 from core import CloudProvider, progress_context, ReportGenerator
 from rich.console import Console
 from rich.table import Table
@@ -7,11 +9,12 @@ from rich.table import Table
 
 def main():
     parser = argparse.ArgumentParser(
-        description="CloudStrike - Multi-Cloud Security Scanner"
+        description="CloudSecure - Multi-Cloud Security Scanner"
     )
     subparsers = parser.add_subparsers(dest='command')
     scan_parser = subparsers.add_parser('scan', help='Scan cloud infrastructure for vulnerabilities')
     scan_parser.add_argument('--aws', action='store_true')
+    scan_parser.add_argument('--azure', action='store_true')
     scan_parser.add_argument('--output', required=True)
     scan_parser.add_argument('--format', choices=['json', 'html'], default='json')
     scan_parser.add_argument('--all', action='store_true')
@@ -33,7 +36,7 @@ def run_scan(args):
             all_findings.extend(findings)
 
             if args.verbose:
-                console.print("[yellow] Scanning for IAM vulnerabilies...[/yellow]")
+                console.print("[yellow]Scanning for IAM vulnerabilies...[/yellow]")
             iam_scanner = IAMScanner(args.profile)
             findings = iam_scanner.scan()
             all_findings.extend(findings)
@@ -42,6 +45,28 @@ def run_scan(args):
                 console.print("[green]Scanning for EC2 Instances...[/green]")
             ec2_scanner = EC2MetaDataScanner()
             findings = ec2_scanner.scan()
+            all_findings.extend(findings)
+
+        if args.azure or args.all:
+            result = subprocess.run(['az', 'account', 'show', '--query', 'id', '-o', 'tsv'], 
+                capture_output=True, text=True)
+            subscription_id = result.stdout.strip()
+            if args.verbose:
+                console.print("[cyan]Scanning for MetaData vulnerabilities...[/cyan]")
+            metadata = MetaDataProbe()
+            findings = metadata.scan()
+            all_findings.extend(findings)
+
+            if args.verbose:
+                console.print("[cyan]Scanning for StorageChecker vulnerabilities...[/cyan]")
+            storage_checker = StorageChecker(subscription_id)
+            findings = storage_checker.scan()
+            all_findings.extend(findings)
+
+            if args.verbose:
+                console.print("[cyan]Scanning for RBAC vulnerabilities...[/cyan]")
+            rbac = RBACAnalyzer(subscription_id)
+            findings = rbac.scan()
             all_findings.extend(findings)
 
         console.print("\n[bold] Scan Summary: [/bold]")
@@ -60,7 +85,14 @@ def run_scan(args):
     
         console.print(table)
 
-        report = ReportGenerator(all_findings, "AWS")
+        if (args.aws and args.azure) or args.all:
+            cloud_provider = "Multi-Cloud"
+        elif args.azure:
+            cloud_provider = "Azure"
+        else:
+            cloud_provider = "AWS"
+
+        report = ReportGenerator(all_findings, cloud_provider)
         report.save_json(args.output)
         print(f"Report saved to {args.output} with {len(all_findings)} findings")
 
