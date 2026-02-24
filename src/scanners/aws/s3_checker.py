@@ -14,14 +14,18 @@ class S3Scanner():
 
 
     def scan_buckets(self):
-        response = self.s3_client.list_buckets()
-        buckets = response['Buckets']
-        for bucket in buckets:
-            bucket_name = bucket["Name"]
-            self.check_public_access(bucket_name)
-            self.check_acl(bucket_name)
-            self.check_policy(bucket_name)
-            self.check_encryption(bucket_name)
+        try:
+            response = self.s3_client.list_buckets()
+            buckets = response['Buckets']
+            for bucket in buckets:
+                bucket_name = bucket["Name"]
+                self.check_public_access(bucket_name)
+                self.check_acl(bucket_name)
+                self.check_policy(bucket_name)
+                self.check_encryption(bucket_name)
+        except:
+            pass
+        
         return self.findings
 
     def check_public_access(self, bucket_name):
@@ -66,14 +70,10 @@ class S3Scanner():
 
     def check_policy(self, bucket_name):
         try:
-            ## Get the policy
             response = self.s3_client.get_bucket_policy(Bucket=bucket_name)
-            ## Parse the JSON string
             policy = json.loads(response["Policy"])
             statements = policy["Statement"]
-            ## Loop through statements
             for statement in statements:
-            ## For each statement, check if it's public 
                 if statement["Effect"] == 'Allow' and statement['Principal'] == '*' or statement['Principal'] == {'AWS': '*'}:
                     self.findings.append({
                         "severity" : Severity.CRITICAL.value,
@@ -81,7 +81,6 @@ class S3Scanner():
                         "resource" : bucket_name,
                         "description" : "Bucket policy grants public access"
                     })
-        ## If public, append finding
         except:
             pass
 
