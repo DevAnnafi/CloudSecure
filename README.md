@@ -1,4 +1,4 @@
-# CloudStrike
+# CloudSecure
 
 Multi-Cloud Security Assessment Testing Tool
 
