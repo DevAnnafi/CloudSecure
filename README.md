@@ -168,4 +168,4 @@ Built with:
 
 ---
 
-**Made with ❤️ by DevAnnafi**
+**Made by DevAnnafi**
