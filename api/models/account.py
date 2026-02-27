@@ -13,4 +13,4 @@ class Account(Base):
     profile = Column(String, nullable=True)
     created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
 
-
+    scans = relationship("Scan", back_populates="account")
