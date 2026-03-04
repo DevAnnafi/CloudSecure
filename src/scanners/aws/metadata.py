@@ -1,6 +1,6 @@
 import requests
 import boto3
-from core.enums import Severity, CloudProvider, FindingType
+from src.core.enums import Severity, CloudProvider, FindingType
 
 class EC2MetaDataScanner():
     METADATA_ENDPOINT = "http://169.254.169.254/latest/meta-data/"

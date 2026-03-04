@@ -2,7 +2,7 @@ from rich import print
 from rich.console import Console
 from rich.progress import Progress, TextColumn, BarColumn, TaskProgressColumn, TimeRemainingColumn
 from rich.spinner import Spinner
-from core.enums import Severity
+from src.core.enums import Severity
 from contextlib import contextmanager
 from rich.traceback import install
 
