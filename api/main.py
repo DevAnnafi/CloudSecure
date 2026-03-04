@@ -1,8 +1,10 @@
 from fastapi import FastAPI
+from api.routers import scans
 from fastapi.middleware.cors import CORSMiddleware
 from api.core.config import settings
 from api.core.database import engine, Base
 from api.models import Account, Finding, Scan
+
 
 Base.metadata.create_all(bind=engine)
 
@@ -19,6 +21,8 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"]
 )
+
+app.include_router(scans.router)
 
 @app.get("/")
 def root():

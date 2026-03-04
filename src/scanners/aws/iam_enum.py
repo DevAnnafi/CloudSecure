@@ -1,6 +1,6 @@
 import boto3
 import json
-from core.enums import Severity, CloudProvider, FindingType
+from src.core.enums import Severity, CloudProvider, FindingType
 
 class IAMScanner():
     def __init__(self, profile_name=None, account_name=None):
