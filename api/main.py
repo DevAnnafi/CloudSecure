@@ -1,5 +1,5 @@
 from fastapi import FastAPI
-from api.routers import scans
+from api.routers import scans, findings
 from fastapi.middleware.cors import CORSMiddleware
 from api.core.config import settings
 from api.core.database import engine, Base
@@ -23,6 +23,7 @@ app.add_middleware(
 )
 
 app.include_router(scans.router)
+app.include_router(findings.router)
 
 @app.get("/")
 def root():

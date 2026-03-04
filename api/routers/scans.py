@@ -111,6 +111,23 @@ def list_scans(skip: int = 0, limit: int = 20, db: Session = Depends(get_db)):
    scans = db.query(Scan).order_by(Scan.started_at.desc()).offset(skip).limit(limit).all()
    return scans
 
+@router.delete("/{scan_id}")
+def delete_scan(scan_id: int, db: Session = Depends(get_db)):
+    """Delete a scan and all its findings"""
+    # Get the scan
+    scan = db.query(Scan).filter(Scan.id == scan_id).first()
+    
+    if scan is None:
+        raise HTTPException(status_code=404, detail="Scan not found")
+    
+    # Delete all findings first (foreign key constraint)
+    db.query(Finding).filter(Finding.scan_id == scan_id).delete()
+    
+    # Delete the scan
+    db.delete(scan)
+    db.commit()
+    
+    return {"message": f"Scan {scan_id} deleted successfully"}
 
 
 
