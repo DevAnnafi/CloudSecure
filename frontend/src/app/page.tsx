@@ -80,11 +80,10 @@ export default function Home() {
           </div>
           
           <button
-            onClick={createScan}
-            disabled={creating}
+            onClick={() => router.push('scans/new')}
             className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed"
           >
-            {creating ? 'Creating Scan...' : '+ New Scan'}
+            + New Scan
           </button>
         </div>
 
