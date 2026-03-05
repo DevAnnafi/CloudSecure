@@ -24,7 +24,7 @@ export default function Scan() {
     const [loading, getLoading] = useState<boolean>(true);
 
     useEffect(() => {
-        fetch("http://localhost:8000/scans/${scanId}")
+        fetch(`http://localhost:8000/scans/${scanId}`)
             .then(response => response.json())
             .then(data => {
                 getScan(data)
