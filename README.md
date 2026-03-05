@@ -1,16 +1,27 @@
 # CloudSecure v2.0 
 
-**Enterprise-grade multi-cloud security scanner with posture telemetry and drift detection**
+**Enterprise-grade multi-cloud security scanner with SaaS dashboard, posture telemetry, and drift detection**
 
 [![CI/CD](https://github.com/DevAnnafi/CloudSecure/actions/workflows/ci.yml/badge.svg)](https://github.com/DevAnnafi/CloudSecure/actions)
 [![Python 3.8+](https://img.shields.io/badge/python-3.8+-blue.svg)](https://www.python.org/downloads/)
+[![Next.js 14](https://img.shields.io/badge/Next.js-14-black)](https://nextjs.org/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-CloudSecure is a comprehensive security scanning tool that identifies misconfigurations and vulnerabilities across AWS, Azure, and Google Cloud Platform. Built for security teams, DevOps engineers, and compliance auditors.
+CloudSecure is a comprehensive security scanning platform that identifies misconfigurations and vulnerabilities across AWS, Azure, and Google Cloud Platform. Built for security teams, DevOps engineers, and compliance auditors.
+
+**NEW in v2.0:** Real-time SaaS dashboard with API-driven scans, security posture scoring, and findings management.
 
 ---
 
 ## Features
+
+### SaaS Dashboard (NEW - v2.0)
+- **Interactive Web Dashboard**: Next.js + React + TypeScript
+- **Real-Time Scanning**: Trigger scans via web UI
+- **Security Posture Visualization**: 0-100 credit score with color-coded metrics
+- **Findings Management**: View, filter, and search vulnerabilities
+- **Multi-Account Support**: Manage multiple cloud accounts from one dashboard
+- **REST API**: FastAPI backend with auto-generated Swagger docs
 
 ### Multi-Cloud Coverage
 - **AWS**: S3 buckets, IAM privilege escalation (18 vectors), EC2 metadata (IMDSv1)
@@ -48,50 +59,162 @@ CloudSecure is a comprehensive security scanning tool that identifies misconfigu
 
 ---
 
-## Quick Start
+## Tech Stack
+
+### Backend
+- **Language**: Python 3.8+
+- **API Framework**: FastAPI
+- **Database**: SQLAlchemy + SQLite (PostgreSQL for production)
+- **Background Tasks**: FastAPI BackgroundTasks
+- **Cloud SDKs**: boto3 (AWS), Azure SDK, Google Cloud SDK
+
+### Frontend
+- **Framework**: Next.js 14 (App Router)
+- **Language**: TypeScript
+- **Styling**: Tailwind CSS
+- **State Management**: React Hooks (useState, useEffect)
+- **Routing**: Next.js file-based routing
+
+### DevOps
+- **Testing**: pytest (40% coverage, 23 passing tests)
+- **CI/CD**: GitHub Actions
+- **CLI**: Rich (terminal UI)
+
+---
+
+## Installation
 
 ### Prerequisites
 - Python 3.8+
+- Node.js 18+ (for dashboard)
 - AWS CLI (for AWS scanning)
 - Azure CLI (for Azure scanning)
 - Google Cloud SDK (for GCP scanning)
 
-### Installation
+### Clone Repository
 ```bash
-git clone https://github.com/YOUR_USERNAME/CloudSecure.git
+git clone https://github.com/DevAnnafi/CloudSecure.git
 cd CloudSecure
+```
+
+### Backend Setup
+```bash
+# Create virtual environment
 python3 -m venv venv
 source venv/bin/activate  # On Windows: venv\Scripts\activate
+
+# Install dependencies
+pip install fastapi uvicorn sqlalchemy pydantic-settings python-dotenv
 pip install -r requirements.txt
 ```
 
-### Single Account Scan
+### Frontend Setup
+```bash
+cd frontend
+npm install
+cd ..
+```
 
-**Scan AWS:**
+---
+
+## Quick Start
+
+### Option 1: SaaS Dashboard (Recommended)
+
+**Start Backend API:**
+```bash
+source venv/bin/activate
+uvicorn api.main:app --reload
+```
+Backend runs at: http://localhost:8000
+
+**Start Frontend Dashboard:**
+```bash
+cd frontend
+npm run dev
+```
+Dashboard runs at: http://localhost:3000
+
+**Access:**
+- Dashboard: http://localhost:3000
+- API Docs: http://localhost:8000/docs
+
+**Create Your First Scan:**
+1. Click "+ New Scan" button
+2. Scan runs automatically (AWS default profile)
+3. View results: security score, findings breakdown
+4. Click on scan to see detailed findings
+
+---
+
+### Option 2: CLI Tool (Original)
+
+**Single Account Scan:**
 ```bash
 python src/cli.py scan --aws --output aws-report.json --verbose
 ```
 
-**Scan Azure:**
-```bash
-az login
-python src/cli.py scan --azure --output azure-report.json --verbose
-```
-
-**Scan GCP:**
-```bash
-gcloud auth application-default login
-python src/cli.py scan --gcp --output gcp-report.json --verbose
-```
-
-**Scan All Clouds:**
+**Multi-Cloud Scan:**
 ```bash
 python src/cli.py scan --all --output multi-cloud-report.json --verbose
 ```
 
 ---
 
-## Multi-Account Scanning (v2.0)
+## Dashboard Features
+
+### Home Page
+- **Scan List Table**: All scans with status, score, findings
+- **Color-Coded Scores**: Green (80+), Yellow (60-79), Red (<60)
+- **Create Scan Button**: Trigger new scans instantly
+- **Clickable Rows**: Navigate to scan details
+
+### Scan Details Page
+- **Big Security Score**: Large 0-100 display with color coding
+- **Status Badge**: Completed, Running, Failed
+- **Timestamps**: Started and completed times
+- **Total Findings**: Count of security issues
+- **Severity Breakdown**: Critical, High, Medium, Low counts
+- **Findings Table**: Full list of vulnerabilities
+  - Severity badges (color-coded)
+  - Title, Resource, Description
+  - Empty state for clean accounts
+
+### API Endpoints
+
+**Scans:**
+- `POST /scans` - Create new scan (triggers background task)
+- `GET /scans` - List all scans (paginated)
+- `GET /scans/{id}` - Get scan details
+- `DELETE /scans/{id}` - Delete scan
+
+**Findings:**
+- `GET /findings/{scan_id}` - Get all findings for a scan
+
+**Health:**
+- `GET /health` - API health check
+
+**Documentation:**
+- `GET /docs` - Swagger UI (interactive API docs)
+
+---
+
+## Database Schema
+
+### Tables
+- **accounts**: Cloud accounts (AWS/Azure/GCP)
+- **scans**: Scan records with scores and metadata
+- **findings**: Individual security vulnerabilities
+
+### Relationships
+```
+Account (1) → Scans (many)
+Scan (1) → Findings (many)
+```
+
+---
+
+## Multi-Account Scanning (CLI)
 
 ### Step 1: Create Configuration
 
@@ -109,42 +232,9 @@ production:
   gcp:
     - project_id: "my-prod-project-123"
       name: "Production GCP Project"
-
-staging:
-  aws:
-    - profile: staging
-      name: "Staging Account"
-  azure:
-    - subscription_id: "87654321-4321-4321-4321-210987654321"
-      name: "Staging Subscription"
 ```
 
-### Step 2: Configure Credentials
-
-**AWS** (`~/.aws/credentials`):
-```ini
-[prod-main]
-aws_access_key_id = YOUR_KEY
-aws_secret_access_key = YOUR_SECRET
-
-[prod-dr]
-aws_access_key_id = YOUR_KEY
-aws_secret_access_key = YOUR_SECRET
-```
-
-**Azure**:
-```bash
-az login
-az account list --output table
-```
-
-**GCP**:
-```bash
-gcloud auth application-default login
-gcloud config set project my-prod-project-123
-```
-
-### Step 3: Run Multi-Account Scan
+### Step 2: Run Multi-Account Scan
 ```bash
 python src/cli.py scan \
   --environment production \
@@ -155,103 +245,85 @@ python src/cli.py scan \
 
 ---
 
-## Drift Detection
+## Current Status
 
-Track security changes over time:
-```bash
-# Create baseline
-python src/cli.py scan \
-  --environment production \
-  --config config/environments.yml \
-  --output baseline.json
+### Completed
+- **CLI Scanner**: 100% functional (v2.0 with multi-account)
+- **Backend API**: 100% functional
+  - FastAPI with SQLAlchemy
+  - Background task processing
+  - REST endpoints for scans/findings
+  - Auto-generated API docs
+- **Dashboard**: 30% complete (Days 1-3 done)
+  - Home page with scan list
+  - Scan details page
+  - Findings table
+  - Create scan button
 
-# Compare against baseline
-python src/cli.py scan \
-  --environment production \
-  --config config/environments.yml \
-  --baseline baseline.json \
-  --output current.json
-```
+### In Progress (Dashboard - Week 4-5)
+- Day 4: Advanced create scan form
+- Day 5: Dashboard overview/home
+- Day 6: Remediation backend
+- Day 7: Multi-cloud support (Azure/GCP in UI)
+- Day 8: Charts & visualizations
+- Day 9: Settings & polish
+- Day 10: Testing
 
-The report will include drift analysis:
-```json
-{
-  "drift": {
-    "baseline_timestamp": "2026-02-25T20:00:00",
-    "current_timestamp": "2026-02-26T02:00:00",
-    "new_findings": 3,
-    "resolved_findings": 1,
-    "score_change": -15,
-    "score_trend": "worse",
-    "baseline_score": 85,
-    "current_score": 70,
-    "new": [...],
-    "resolved": [...]
-  }
-}
-```
+### Upcoming (Week 6-7)
+- User authentication (JWT)
+- Multi-tenancy (user-specific data)
+- Landing page with pricing
+- Deployment to production
+- PostgreSQL migration
+- Custom domain
 
 ---
 
-## Report Structure
+## Roadmap
 
-CloudSecure generates comprehensive JSON reports:
-```json
-{
-  "metadata": {
-    "tool": "CloudStrike",
-    "timestamp": "2026-02-26T02:00:00",
-    "cloud_provider": "production (Multi-Account)"
-  },
-  "summary": {
-    "total": 12,
-    "critical": 8,
-    "high": 2,
-    "medium": 1,
-    "low": 1
-  },
-  "posture": {
-    "overall_score": 75,
-    "cloud_breakdown": {
-      "AWS": {
-        "findings_count": 8,
-        "critical": 6,
-        "high": 1,
-        "medium": 1,
-        "low": 0,
-        "score": 72
-      },
-      "Azure": {
-        "findings_count": 3,
-        "critical": 2,
-        "high": 1,
-        "medium": 0,
-        "low": 0,
-        "score": 80
-      },
-      "GCP": {
-        "findings_count": 1,
-        "critical": 0,
-        "high": 0,
-        "medium": 0,
-        "low": 1,
-        "score": 99
-      }
-    }
-  },
-  "findings": [
-    {
-      "severity": "critical",
-      "title": "Public S3 Bucket via Policy",
-      "resource": "sensitive-data-bucket",
-      "cloud_provider": "AWS",
-      "account_id": "123456789012",
-      "account_name": "Production Main Account",
-      "description": "Bucket policy grants public access"
-    }
-  ]
-}
-```
+### Phase 1: Dashboard MVP (Week 4-5) - In Progress
+- ✅ Scan list view
+- ✅ Scan details page
+- ✅ Findings table
+- ⏳ Create scan form
+- ⏳ Dashboard home
+- ⏳ Remediation suggestions
+- ⏳ Charts & visualizations
+
+### Phase 2: Authentication & Launch (Week 6)
+- User registration/login
+- JWT authentication
+- User-specific scans
+- Landing page
+- Pricing tiers (Free/Pro/Enterprise)
+
+### Phase 3: Deployment (Week 7)
+- Backend: Railway/Render
+- Frontend: Vercel
+- Database: PostgreSQL
+- Domain: cloudsecure.io
+- Go live!
+
+### Phase 4: Growth (Month 2+)
+- Beta user onboarding
+- Email notifications
+- Slack integration
+- PDF reports
+- Scheduled scans
+- API keys for integrations
+
+### Phase 5: Revenue (Month 3+)
+- Stripe integration
+- Paid plans ($99-499/mo)
+- First paying customers
+- Marketing & SEO
+
+### Phase 6: Scale (Month 4-6)
+- Auto-remediation (Terraform)
+- Compliance frameworks (CIS, SOC 2)
+- Team accounts
+- RBAC
+- $10k MRR target
 
 ---
 
@@ -265,55 +337,20 @@ CloudSecure generates comprehensive JSON reports:
   - Encryption disabled (HIGH)
 
 - **IAM Privilege Escalation** (18 vectors)
-  - Wildcard permissions (`*:*`, `iam:*`) - CRITICAL
-  - CreateAccessKey - CRITICAL
-  - AttachUserPolicy - CRITICAL
-  - PutUserPolicy - CRITICAL
-  - AttachRolePolicy - CRITICAL
-  - PutRolePolicy - CRITICAL
-  - AttachGroupPolicy - CRITICAL
-  - PutGroupPolicy - CRITICAL
-  - CreateLoginProfile - CRITICAL
-  - UpdateLoginProfile - CRITICAL
-  - PassRole + Lambda - CRITICAL
-  - PassRole + EC2 - CRITICAL
-  - PassRole + CloudFormation - CRITICAL
-  - CreatePolicy - HIGH
-  - SetDefaultPolicyVersion - HIGH
-  - PassRole + DataPipeline - HIGH
-  - PassRole + Glue - HIGH
-  - AssumeRole - HIGH
-  - InvokeFunction - HIGH
-  - RunInstances - HIGH
+  - Wildcard permissions, CreateAccessKey, AttachUserPolicy, etc.
 
 - **EC2 Metadata**
   - IMDSv1 enabled (CRITICAL)
 
 ### Azure (3 checks)
-- **Storage Containers**
-  - Public blob containers (CRITICAL)
-
-- **RBAC Roles**
-  - Owner role assignment (CRITICAL)
-  - User Access Administrator role (CRITICAL)
-  - Contributor role assignment (HIGH)
-
-- **VM Metadata**
-  - IMDS accessible (CRITICAL)
+- Public storage containers (CRITICAL)
+- Contributor/Owner roles (CRITICAL/HIGH)
+- VM metadata access (CRITICAL)
 
 ### GCP (3 checks)
-- **Cloud Storage**
-  - Public buckets - allUsers (CRITICAL)
-  - Public buckets - allAuthenticatedUsers (HIGH)
-
-- **IAM Bindings**
-  - Owner role (CRITICAL)
-  - Editor role (HIGH)
-  - Public role binding - allUsers (CRITICAL)
-  - Public role binding - allAuthenticatedUsers (HIGH)
-
-- **Compute Metadata**
-  - IMDS accessible (CRITICAL)
+- Public buckets (CRITICAL/HIGH)
+- Owner/Editor roles (CRITICAL/HIGH)
+- Compute metadata access (CRITICAL)
 
 ---
 
@@ -327,42 +364,8 @@ pytest
 # Run with coverage
 pytest --cov=src tests/
 
-# Run specific test file
-pytest tests/unit/test_aws.py
+# Current: 40% coverage, 23 passing tests
 ```
-
-Current coverage: **40%** with **23 passing tests**
-
----
-
-## Documentation
-
-- [Detailed Usage Guide](USAGE.md)
-- [Configuration Example](config/environments.example.yml)
-- [Contributing Guidelines](CONTRIBUTING.md)
-
----
-
-## Security Best Practices
-
-1. **Use Read-Only Credentials**
-   - AWS: `SecurityAudit` managed policy
-   - Azure: `Reader` role
-   - GCP: `Viewer` role
-
-2. **Protect Configuration Files**
-   - Add `config/environments.yml` to `.gitignore`
-   - Never commit real credentials or account IDs
-
-3. **Run Regularly**
-   - Schedule weekly scans
-   - Compare against baseline for drift
-   - Integrate into CI/CD pipelines
-
-4. **Prioritize Findings**
-   - Address CRITICAL findings immediately
-   - Plan HIGH findings for next sprint
-   - Track MEDIUM/LOW for compliance
 
 ---
 
@@ -390,17 +393,19 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - Uses [Azure SDK for Python](https://github.com/Azure/azure-sdk-for-python)
 - Powered by [Google Cloud Python Client](https://github.com/googleapis/google-cloud-python)
 - CLI powered by [Rich](https://github.com/Textualize/rich)
+- Dashboard built with [Next.js](https://nextjs.org/) and [Tailwind CSS](https://tailwindcss.com/)
+- API powered by [FastAPI](https://fastapi.tiangolo.com/)
 
 ---
 
 ## Contact
 
-Email: [islamannafi@gmail.com]
+Email: islamannafi@gmail.com
 
 Project Link: [https://github.com/DevAnnafi/CloudSecure](https://github.com/DevAnnafi/CloudSecure)
 
 ---
 
 <p align="center">
-  Made By DevAnnafi for Cloud Security
+  Made by DevAnnafi for Cloud Security
 </p>
