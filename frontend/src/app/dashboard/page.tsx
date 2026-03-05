@@ -1,0 +1,112 @@
+"use client"
+
+import { useEffect, useState } from "react"
+import { getDashboard } from "@/lib/api"
+import Link from "next/link"
+
+export default function DashboardPage() {
+  const [data, setData] = useState<any>(null)
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+  getDashboard()
+    .then(setData)
+    .catch((err) => {
+      console.error("Dashboard fetch error:", err)
+      setLoading(false)
+    })
+    .finally(() => setLoading(false))
+}, [])
+
+  if (loading) return <div className="p-8 text-gray-500">Loading dashboard...</div>
+  if (!data)   return <div className="p-8 text-red-500">Failed to load dashboard.</div>
+
+  const scoreColor =
+    data.security_score >= 80 ? "text-green-500" :
+    data.security_score >= 60 ? "text-yellow-500" : "text-red-500"
+
+  return (
+    <div className="p-8 space-y-8 bg-gray-50 min-h-screen">
+      <h1 className="text-3xl font-bold text-gray-800">Security Dashboard</h1>
+
+      {/* Metric Cards */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+        <div className="bg-white rounded-xl shadow p-6">
+          <p className="text-sm text-gray-500 mb-1">Security Score</p>
+          <p className={`text-5xl font-bold ${scoreColor}`}>{data.security_score}</p>
+          <p className="text-xs text-gray-400 mt-1">out of 100</p>
+        </div>
+        <div className="bg-white rounded-xl shadow p-6">
+          <p className="text-sm text-gray-500 mb-1">Total Findings</p>
+          <p className="text-5xl font-bold text-gray-800">{data.total_findings}</p>
+        </div>
+        <div className="bg-white rounded-xl shadow p-6">
+          <p className="text-sm text-gray-500 mb-1">Critical</p>
+          <p className="text-5xl font-bold text-red-500">{data.severity.critical}</p>
+        </div>
+        <div className="bg-white rounded-xl shadow p-6">
+          <p className="text-sm text-gray-500 mb-1">High</p>
+          <p className="text-5xl font-bold text-orange-400">{data.severity.high}</p>
+        </div>
+      </div>
+
+      {/* Second row */}
+      <div className="grid grid-cols-2 md:grid-cols-3 gap-6">
+        <div className="bg-white rounded-xl shadow p-6">
+          <p className="text-sm text-gray-500 mb-1">Medium</p>
+          <p className="text-4xl font-bold text-yellow-500">{data.severity.medium}</p>
+        </div>
+        <div className="bg-white rounded-xl shadow p-6">
+          <p className="text-sm text-gray-500 mb-1">Low</p>
+          <p className="text-4xl font-bold text-blue-400">{data.severity.low}</p>
+        </div>
+        <div className="bg-white rounded-xl shadow p-6">
+          <p className="text-sm text-gray-500 mb-1">Total Scans</p>
+          <p className="text-4xl font-bold text-gray-700">{data.total_scans}</p>
+        </div>
+      </div>
+
+      {/* Recent Scans Table */}
+      <div className="bg-white rounded-xl shadow p-6">
+        <div className="flex justify-between items-center mb-4">
+          <h2 className="text-xl font-semibold text-gray-700">Recent Scans</h2>
+          <Link href="/scans" className="text-sm text-blue-500 hover:underline">View all →</Link>
+        </div>
+        <table className="w-full text-sm">
+          <thead>
+            <tr className="text-left text-gray-400 border-b">
+              <th className="pb-2">ID</th>
+              <th className="pb-2">Score</th>
+              <th className="pb-2">Critical</th>
+              <th className="pb-2">High</th>
+              <th className="pb-2">Status</th>
+              <th className="pb-2">Date</th>
+            </tr>
+          </thead>
+          <tbody>
+            {data.recent_scans.map((scan: any) => (
+              <tr key={scan.id} className="border-b hover:bg-gray-50">
+                <td className="py-2">
+                  <Link href={`/scans/${scan.id}`} className="text-blue-500 hover:underline">
+                    #{scan.id}
+                  </Link>
+                </td>
+                <td className={`py-2 font-bold ${scan.score >= 80 ? "text-green-500" : scan.score >= 60 ? "text-yellow-500" : "text-red-500"}`}>
+                  {scan.score}
+                </td>
+                <td className="py-2 text-red-500">{scan.critical_count}</td>
+                <td className="py-2 text-orange-400">{scan.high_count}</td>
+                <td className="py-2">
+                  <span className={`px-2 py-1 rounded text-xs font-medium ${scan.status === "completed" ? "bg-green-100 text-green-700" : scan.status === "failed" ? "bg-red-100 text-red-700" : "bg-yellow-100 text-yellow-700"}`}>
+                    {scan.status}
+                  </span>
+                </td>
+                <td className="py-2 text-gray-400">{new Date(scan.started_at).toLocaleDateString()}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  )
+}

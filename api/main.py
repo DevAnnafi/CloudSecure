@@ -4,6 +4,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from api.core.config import settings
 from api.core.database import engine, Base
 from api.models import Account, Finding, Scan
+from api.routers import dashboard
 
 
 Base.metadata.create_all(bind=engine)
@@ -24,6 +25,7 @@ app.add_middleware(
 
 app.include_router(scans.router)
 app.include_router(findings.router)
+app.include_router(dashboard.router)
 
 @app.get("/")
 def root():
