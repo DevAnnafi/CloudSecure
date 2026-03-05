@@ -30,7 +30,6 @@ export default function RootLayout({
         {/* Navbar */}
         <nav className="bg-gray-900 text-white px-8 py-4 flex items-center justify-between shadow">
           <div className="flex items-center gap-2">
-            <span className="text-green-400 text-xl font-bold">🔒</span>
             <span className="text-lg font-bold tracking-tight">CloudSecure</span>
           </div>
           <div className="flex gap-6 text-sm font-medium">

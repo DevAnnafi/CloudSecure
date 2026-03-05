@@ -285,8 +285,8 @@ python src/cli.py scan \
 - ✅ Scan list view
 - ✅ Scan details page
 - ✅ Findings table
-- ⏳ Create scan form
-- ⏳ Dashboard home
+- ✅ Create scan form
+- ✅ Dashboard home
 - ⏳ Remediation suggestions
 - ⏳ Charts & visualizations
 
