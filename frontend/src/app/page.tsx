@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 
 interface Scan {
   id: number;
@@ -16,6 +17,7 @@ interface Scan {
 }
 
 export default function Home() {
+  const router = useRouter();
   const [scans, setScans] = useState<Scan[]>([]);
   const [loading, setLoading] = useState(true);
   const [creating, setCreating] = useState(false);
@@ -56,7 +58,6 @@ export default function Home() {
       .then(data => {
         console.log('Scan created:', data);
         setCreating(false);
-        // Refresh scans after 3 seconds (wait for scan to complete)
         setTimeout(fetchScans, 3000);
       })
       .catch(error => {
@@ -120,7 +121,11 @@ export default function Home() {
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
                   {scans.map((scan) => (
-                    <tr key={scan.id}>
+                    <tr 
+                      key={scan.id}
+                      onClick={() => router.push(`/scans/${scan.id}`)}
+                      className="hover:bg-gray-50 cursor-pointer transition"
+                    >
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                         {scan.id}
                       </td>
