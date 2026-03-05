@@ -1,13 +1,17 @@
 import boto3
 import json
 from src.core.enums import Severity, CloudProvider, FindingType
+from botocore.exceptions import ProfileNotFound
 
 class S3Scanner():  
     def __init__(self, profile_name=None, account_name=None):
         self.findings = []
         self.account_name = account_name or "Default"
         
-        session = boto3.Session(profile_name=profile_name) if profile_name else boto3.Session()
+        try:
+            session = boto3.Session(profile_name=profile_name) if profile_name else boto3.Session()
+        except ProfileNotFound:
+            session = boto3.Session(profile_name="default")
         self.s3_client = session.client('s3')
         
         sts_client = session.client('sts')
