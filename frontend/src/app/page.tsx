@@ -71,20 +71,17 @@ export default function Home() {
       <div className="max-w-7xl mx-auto py-6 px-4">
         <div className="flex justify-between items-center">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">
-              CloudSecure Dashboard
-            </h1>
-            <p className="mt-2 text-gray-600">
-              Multi-cloud security scanner
-            </p>
+            <h1 className="text-3xl font-bold text-gray-900">All Scans</h1>
+            <p className="mt-2 text-gray-600">View and manage your cloud security scans</p>
           </div>
-          
-          <button
-            onClick={() => router.push('scans/new')}
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed"
-          >
-            + New Scan
-          </button>
+          <div className="flex gap-3">
+            <button
+              onClick={() => router.push('scans/new')}
+              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+            >
+              + New Scan
+            </button>
+          </div>
         </div>
 
         <div className="mt-8">

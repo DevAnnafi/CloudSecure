@@ -1,7 +1,7 @@
 "use client";
 
 import { useParams } from "next/navigation";
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 
 interface Scan {
   id: number;
@@ -26,6 +26,62 @@ interface Finding {
   account_name: string;
 }
 
+function getRemediation(title: string): string[] {
+  const t = title.toLowerCase()
+
+  if (t.includes("public access") && t.includes("s3")) return [
+    "Go to AWS Console → S3 → select the bucket",
+    "Click 'Permissions' tab",
+    "Under 'Block public access', click Edit",
+    "Enable all four Block Public Access settings",
+    "Click Save changes"
+  ]
+  if (t.includes("acl") && t.includes("s3")) return [
+    "Go to AWS Console → S3 → select the bucket",
+    "Click 'Permissions' tab → Access Control List",
+    "Remove any 'Everyone' or 'Authenticated Users' grants",
+    "Save changes"
+  ]
+  if (t.includes("encryption") && t.includes("s3")) return [
+    "Go to AWS Console → S3 → select the bucket",
+    "Click 'Properties' tab",
+    "Under 'Default encryption', click Edit",
+    "Select SSE-S3 or SSE-KMS",
+    "Click Save changes"
+  ]
+  if (t.includes("imdsv1") || t.includes("metadata")) return [
+    "Go to AWS Console → EC2 → select the instance",
+    "Click Actions → Instance Settings → Modify instance metadata options",
+    "Set 'IMDSv2' to Required",
+    "Click Save"
+  ]
+  if (t.includes("iam") || t.includes("privilege") || t.includes("wildcard")) return [
+    "Go to AWS Console → IAM → Policies",
+    "Find and edit the policy with wildcard (*) permissions",
+    "Replace '*' actions with only the specific actions needed",
+    "Apply least-privilege principle",
+    "Click Save changes"
+  ]
+  if (t.includes("public") && t.includes("bucket") && t.includes("gcs")) return [
+    "Go to GCP Console → Cloud Storage → select the bucket",
+    "Click 'Permissions' tab",
+    "Remove 'allUsers' and 'allAuthenticatedUsers' members",
+    "Click Save"
+  ]
+  if (t.includes("azure") || t.includes("container")) return [
+    "Go to Azure Portal → Storage Accounts → select account",
+    "Click 'Containers' → select the container",
+    "Change 'Public access level' to Private",
+    "Click OK"
+  ]
+
+  return [
+    "Review the affected resource in your cloud console",
+    "Apply the principle of least privilege",
+    "Consult your cloud provider's security best practices documentation"
+  ]
+}
+
 export default function Scan() {
   const params = useParams();
   const scanId = params.id;
@@ -33,6 +89,8 @@ export default function Scan() {
   const [scan, getScan] = useState<Scan | null>(null);
   const [loading, getLoading] = useState<boolean>(true);
   const [findings, setFindings] = useState<Finding[]>([]);
+
+  const [expandedFinding, setExpandedFinding] = useState<number | null>(null)
 
   useEffect(() => {
     fetch(`http://localhost:8000/scans/${scanId}`)
@@ -200,36 +258,49 @@ export default function Scan() {
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
                         Description
                       </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                        Fix
+                      </th>
                     </tr>
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
                     {findings.map((finding) => (
-                      <tr key={finding.id}>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <span
-                            className={`px-2 py-1 text-xs font-semibold rounded-full ${
-                              finding.severity === "critical"
-                                ? "bg-red-100 text-red-800"
-                                : finding.severity === "high"
-                                  ? "bg-orange-100 text-orange-800"
-                                  : finding.severity === "medium"
-                                    ? "bg-yellow-100 text-yellow-800"
-                                    : "bg-blue-100 text-blue-800"
-                            }`}
-                          >
-                            {finding.severity}
-                          </span>
-                        </td>
-                        <td className="px-6 py-4 text-sm text-gray-900">
-                          {finding.title}
-                        </td>
-                        <td className="px-6 py-4 text-sm text-gray-500">
-                          {finding.resource}
-                        </td>
-                        <td className="px-6 py-4 text-sm text-gray-600">
-                          {finding.description}
-                        </td>
-                      </tr>
+                        <React.Fragment key={finding.id}>
+                        <tr
+                          onClick={() => setExpandedFinding(expandedFinding === finding.id ? null : finding.id)}
+                          className="hover:bg-gray-50 cursor-pointer transition"
+                        >
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <span className={`px-2 py-1 text-xs font-semibold rounded-full ${
+                              finding.severity === "CRITICAL" ? "bg-red-100 text-red-800" :
+                              finding.severity === "HIGH" ? "bg-orange-100 text-orange-800" :
+                              finding.severity === "MEDIUM" ? "bg-yellow-100 text-yellow-800" :
+                              "bg-blue-100 text-blue-800"
+                            }`}>
+                              {finding.severity}
+                            </span>
+                          </td>
+                          <td className="px-6 py-4 text-sm text-gray-900">{finding.title}</td>
+                          <td className="px-6 py-4 text-sm text-gray-500">{finding.resource}</td>
+                          <td className="px-6 py-4 text-sm text-gray-600">{finding.description}</td>
+                          <td className="px-6 py-4 text-sm text-blue-500">
+                            {expandedFinding === finding.id ? " Hide fix" : " How to fix"}
+                          </td>
+                        </tr>
+
+                        {expandedFinding === finding.id && (
+                          <tr key={`${finding.id}-remediation`} className="bg-blue-50">
+                            <td colSpan={5} className="px-6 py-4">
+                              <p className="text-sm font-semibold text-blue-800 mb-2">Remediation Steps</p>
+                              <ol className="list-decimal list-inside space-y-1">
+                                {getRemediation(finding.title).map((step, i) => (
+                                  <li key={i} className="text-sm text-blue-900">{step}</li>
+                                ))}
+                              </ol>
+                            </td>
+                          </tr>                          
+                        )}
+                        </React.Fragment>
                     ))}
                   </tbody>
                 </table>
