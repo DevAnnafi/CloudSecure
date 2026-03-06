@@ -66,6 +66,25 @@ export default function DashboardPage() {
         </div>
       </div>
 
+      {/* Cloud Coverage */}
+      <div className="bg-white rounded-xl shadow p-6">
+        <h2 className="text-lg font-semibold text-gray-700 mb-4">Findings by Cloud</h2>
+        <div className="grid grid-cols-3 gap-4">
+          <div className="text-center p-4 bg-orange-50 rounded-lg">
+            <p className="text-2xl font-bold text-orange-500">{data.cloud_coverage.aws}</p>
+            <p className="text-sm text-gray-500 mt-1">AWS</p>
+          </div>
+          <div className="text-center p-4 bg-blue-50 rounded-lg">
+            <p className="text-2xl font-bold text-blue-500">{data.cloud_coverage.azure}</p>
+            <p className="text-sm text-gray-500 mt-1">Azure</p>
+          </div>
+          <div className="text-center p-4 bg-red-50 rounded-lg">
+            <p className="text-2xl font-bold text-red-500">{data.cloud_coverage.gcp}</p>
+            <p className="text-sm text-gray-500 mt-1">GCP</p>
+          </div>
+        </div>
+      </div>
+
       {/* Recent Scans Table */}
       <div className="bg-white rounded-xl shadow p-6">
         <div className="flex justify-between items-center mb-4">

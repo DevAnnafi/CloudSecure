@@ -17,6 +17,11 @@ def get_dashboard(db: Session = Depends(get_db)):
     medium   = db.query(func.count(Finding.id)).filter(Finding.severity == "MEDIUM").scalar()
     low      = db.query(func.count(Finding.id)).filter(Finding.severity == "LOW").scalar()
 
+    aws_count   = db.query(func.count(Finding.id)).filter(Finding.cloud_provider == "AWS").scalar()
+    azure_count = db.query(func.count(Finding.id)).filter(Finding.cloud_provider == "Azure").scalar()
+    gcp_count   = db.query(func.count(Finding.id)).filter(Finding.cloud_provider == "GCP").scalar()
+
+
     recent_scans = db.query(Scan).order_by(Scan.started_at.desc()).limit(5).all()
 
     return {
@@ -24,6 +29,7 @@ def get_dashboard(db: Session = Depends(get_db)):
         "total_scans": total_scans,
         "total_findings": total_findings,
         "severity": {"critical": critical, "high": high, "medium": medium, "low": low},
+        "cloud_coverage": {"aws": aws_count, "azure": azure_count, "gcp": gcp_count},
         "recent_scans": [
             {
                 "id": s.id,
