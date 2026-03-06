@@ -9,12 +9,14 @@ from src.scanners.aws import S3Scanner, IAMScanner, EC2MetaDataScanner
 from src.core.report import ReportGenerator
 from datetime import datetime, timezone
 from typing import List
+from api.core.auth import get_current_user
+from api.models.user import User
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '../../'))
 
 router = APIRouter(prefix="/scans", tags=["scans"])
 
-def run_scan_task(scan_id: int, db: Session):
+def run_scan_task(scan_id: int, db: Session, current_user: User = Depends(get_current_user)):
    try:
         ## Getting the Scan and Account From Database with updating scan status to running
     scan = db.query(Scan).filter(Scan.id == scan_id).first()
@@ -72,7 +74,7 @@ def run_scan_task(scan_id: int, db: Session):
       raise e
    
 @router.post("/", response_model=ScanResponse)    
-def create_scan(scan_data: ScanCreate, background_tasks: BackgroundTasks, db: Session = Depends(get_db)):
+def create_scan(scan_data: ScanCreate, background_tasks: BackgroundTasks, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
    account = db.query(Account).filter(
       Account.cloud_provider == scan_data.cloud_provider,
       Account.account_id == scan_data.account_id
@@ -90,7 +92,7 @@ def create_scan(scan_data: ScanCreate, background_tasks: BackgroundTasks, db: Se
       db.commit()
       db.refresh(account)
 
-   scan = Scan(account_id=account.id)   
+   scan = Scan(account_id=account.id, user_id=current_user.id)
    db.add(scan)
    db.commit()
    db.refresh(scan)
@@ -100,8 +102,8 @@ def create_scan(scan_data: ScanCreate, background_tasks: BackgroundTasks, db: Se
    return scan
 
 @router.get("/{scan_id}", response_model=ScanResponse)
-def get_scan(scan_id: int, db: Session = Depends(get_db)):
-   scan = db.query(Scan).filter(Scan.id == scan_id).first()
+def get_scan(scan_id: int, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+   scan = db.query(Scan).filter(Scan.id == scan_id, Scan.user_id == current_user.id).first()
    if scan is None:
       raise HTTPException(status_code=404, detail="Scan not found")
    return scan
@@ -112,7 +114,7 @@ def list_scans(skip: int = 0, limit: int = 20, db: Session = Depends(get_db)):
    return scans
 
 @router.delete("/{scan_id}")
-def delete_scan(scan_id: int, db: Session = Depends(get_db)):
+def delete_scan(scan_id: int, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     """Delete a scan and all its findings"""
     # Get the scan
     scan = db.query(Scan).filter(Scan.id == scan_id).first()

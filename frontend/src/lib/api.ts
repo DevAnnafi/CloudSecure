@@ -1,27 +1,40 @@
 const API_BASE = "http://localhost:8000";
 
 export async function getDashboard() {
-  const res = await fetch(`${API_BASE}/dashboard`);
-  if (!res.ok) throw new Error("Failed to fetch dashboard");
-  return res.json();
+  const token = localStorage.getItem("token")
+  const res = await fetch(`${API_BASE}/dashboard`, {
+    headers: { "Authorization": `Bearer ${token}` }
+  })
+  if (!res.ok) throw new Error("Failed to fetch dashboard")
+  return res.json()
 }
 
 export async function getScans() {
-  const res = await fetch(`${API_BASE}/scans`);
+  const token = localStorage.getItem("token")
+  const res = await fetch(`${API_BASE}/scans`, {
+    headers: { "Authorization": `Bearer ${token}` }
+  })
   if (!res.ok) throw new Error("Failed to fetch scans");
   return res.json();
 }
 
 export async function getScan(id: number) {
-  const res = await fetch(`${API_BASE}/scans/${id}`);
+  const token = localStorage.getItem("token")
+  const res = await fetch(`${API_BASE}/scans/${id}`, {
+    headers: { "Authorization": `Bearer ${token}`}
+  });
   if (!res.ok) throw new Error("Failed to fetch scan");
   return res.json();
 }
 
 export async function createScan(accountId: number) {
+  const token = localStorage.getItem("token")
   const res = await fetch(`${API_BASE}/scans`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: { 
+      "Content-Type": "application/json",
+      "Authorization": `Bearer ${token}`
+    },
     body: JSON.stringify({ account_id: accountId }),
   });
   if (!res.ok) throw new Error("Failed to create scan");
@@ -29,7 +42,10 @@ export async function createScan(accountId: number) {
 }
 
 export async function getFindings(scanId: number) {
-  const res = await fetch(`${API_BASE}/findings/${scanId}`);
+  const token = localStorage.getItem("token")
+  const res = await fetch(`${API_BASE}/findings/${scanId}`, {
+    headers: { "Authorization": `Bearer ${token}`}
+  });
   if (!res.ok) throw new Error("Failed to fetch findings");
   return res.json();
 }

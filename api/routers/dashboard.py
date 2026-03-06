@@ -3,11 +3,13 @@ from sqlalchemy.orm import Session
 from sqlalchemy import func
 from api.core.database import get_db
 from api.models import Scan, Finding
+from api.core.auth import get_current_user
+from api.models.user import User
 
 router = APIRouter()
 
 @router.get("/dashboard")
-def get_dashboard(db: Session = Depends(get_db)):
+def get_dashboard(db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     latest_scan = db.query(Scan).order_by(Scan.started_at.desc()).first()
     total_scans = db.query(func.count(Scan.id)).scalar()
     total_findings = db.query(func.count(Finding.id)).scalar()
