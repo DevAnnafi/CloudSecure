@@ -79,7 +79,7 @@ export default function DashboardPage() {
         <div>
           <p className="text-green-400 text-sm font-medium uppercase tracking-widest mb-1">Security Dashboard</p>
           <h1 className="text-3xl font-bold text-white">
-            {user ? <>{greeting}, {user.full_name || user.email} 👋</> : <span className="text-gray-600 animate-pulse">Loading...</span>}
+            {user ? <>{greeting}, {user.full_name || user.email} </> : <span className="text-gray-600 animate-pulse">Loading...</span>}
           </h1>
           <p className="text-gray-500 mt-1 text-sm">Here's your real-time cloud security overview.</p>
         </div>

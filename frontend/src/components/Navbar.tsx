@@ -34,7 +34,7 @@ export default function Navbar() {
     router.push("/login")
   }
 
-  if (pathname === "/login" || pathname === "/register") return null
+  if (pathname === "/login" || pathname === "/register" || pathname === "/" || pathname === "/terms" || pathname === "/privacy" || pathname === "/cookies" || pathname === "/docs") return null
 
   const initials = user?.full_name
     ? user.full_name.split(" ").map((n: string) => n[0]).join("").toUpperCase()
@@ -50,7 +50,6 @@ export default function Navbar() {
   return (
     <nav className="bg-gray-900 text-white px-8 py-4 flex items-center justify-between shadow">
       <div className="flex items-center gap-2">
-        <span className="text-green-400 text-xl font-bold">🔒</span>
         <span className="text-lg font-bold tracking-tight">CloudSecure</span>
       </div>
 
