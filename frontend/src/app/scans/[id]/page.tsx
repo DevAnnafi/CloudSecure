@@ -1,6 +1,6 @@
 "use client";
 
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import React, { useState, useEffect } from "react";
 
 interface Scan {
@@ -85,6 +85,7 @@ function getRemediation(title: string): string[] {
 export default function Scan() {
   const params = useParams();
   const scanId = params.id;
+  const router = useRouter()
 
   const [scan, getScan] = useState<Scan | null>(null);
   const [loading, getLoading] = useState<boolean>(true);
@@ -116,6 +117,13 @@ export default function Scan() {
         console.error("Error:", error);
       });
   }, [scan, scanId]);
+
+  useEffect(() => {
+  const token = localStorage.getItem("token")
+  if (!token) {
+    router.push("/login")
+  }
+}, [])
 
   return (
     <div className="min-h-screen bg-gray-50 max-w-7xl mx-auto py-6 px-4">

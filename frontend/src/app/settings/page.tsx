@@ -36,6 +36,13 @@ export default function SettingsPage() {
     fetchAccounts()
   }, [])
 
+  useEffect(() => {
+  const token = localStorage.getItem("token")
+  if (!token) {
+    router.push("/login")
+  }
+}, [])
+
   const handleAdd = async () => {
     if (!accountId || !accountName) return
     setSaving(true)
