@@ -7,10 +7,12 @@ import {
   PieChart, Pie, Cell, Tooltip, ResponsiveContainer,
   LineChart, Line, XAxis, YAxis, CartesianGrid
 } from "recharts"
+import { useRouter } from 'next/navigation';
 
 export default function DashboardPage() {
   const [data, setData] = useState<any>(null)
   const [loading, setLoading] = useState(true)
+  const router = useRouter()
 
   useEffect(() => {
     getDashboard()
@@ -21,6 +23,13 @@ export default function DashboardPage() {
       })
       .finally(() => setLoading(false))
   }, [])
+
+  useEffect(() => {
+  const token = localStorage.getItem("token")
+  if (!token) {
+    router.push("/login")
+  }
+}, [])
 
   if (loading) return <div className="p-8 text-gray-500">Loading dashboard...</div>
   if (!data)   return <div className="p-8 text-red-500">Failed to load dashboard.</div>

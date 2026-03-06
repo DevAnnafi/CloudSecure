@@ -39,6 +39,13 @@ export default function Home() {
     fetchScans();
   }, []);
 
+  useEffect(() => {
+  const token = localStorage.getItem("token")
+  if (!token) {
+    router.push("/login")
+  }
+}, [])
+
   const createScan = () => {
     setCreating(true);
     
