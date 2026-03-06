@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timezone
 import json
 
 class ReportGenerator:
@@ -11,7 +11,7 @@ class ReportGenerator:
         return {
             "metadata": {
                 "tool": "CloudStrike",
-                "timestamp" : datetime.utcnow().isoformat(),
+                "timestamp": datetime.now(timezone.utc).isoformat(),
                 "cloud_provider": self.cloud_service,
         }, 
         "summary" : self.get_summary(),
