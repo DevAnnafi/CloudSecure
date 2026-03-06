@@ -91,6 +91,7 @@ export default function Scan() {
   const [findings, setFindings] = useState<Finding[]>([]);
 
   const [expandedFinding, setExpandedFinding] = useState<number | null>(null)
+  const [cloudFilter, setCloudFilter] = useState<string>("ALL")
 
   useEffect(() => {
     fetch(`http://localhost:8000/scans/${scanId}`)
@@ -232,6 +233,22 @@ export default function Scan() {
               Security Findings
             </h2>
 
+            <div className="flex gap-2 mb-4">
+              {["ALL", "AWS", "Azure", "GCP"].map((provider) => (
+                <button
+                  key={provider}
+                  onClick={() => setCloudFilter(provider)}
+                  className={`px-3 py-1 rounded-full text-sm font-medium transition ${
+                    cloudFilter === provider
+                      ? "bg-blue-600 text-white"
+                      : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                  }`}
+                >
+                  {provider}
+                </button>
+              ))}
+            </div>
+
             {findings.length === 0 ? (
               <div className="bg-green-50 border border-green-200 rounded-lg p-8 text-center">
                 <p className="text-green-800 text-xl font-semibold">
@@ -264,7 +281,7 @@ export default function Scan() {
                     </tr>
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
-                    {findings.map((finding) => (
+                    {(cloudFilter === "ALL" ? findings : findings.filter(f => f.cloud_provider === cloudFilter)).map((finding) => (
                         <React.Fragment key={finding.id}>
                         <tr
                           onClick={() => setExpandedFinding(expandedFinding === finding.id ? null : finding.id)}

@@ -42,7 +42,7 @@ class ReportGenerator:
         score = 100
 
         for finding in self.findings:
-            severity = finding["severity"]
+            severity = finding["severity"].lower()
             if severity == 'critical':
                 score -= 10
             elif severity == 'high':
