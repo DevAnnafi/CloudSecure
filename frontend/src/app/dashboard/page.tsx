@@ -71,6 +71,9 @@ export default function DashboardPage() {
     { label: "Total Scans", value: data.total_scans, sub: "scans run", color: "#a78bfa", bg: "from-purple-950 to-gray-900", border: "border-purple-900" },
   ]
 
+  const displayName =
+  user?.full_name || user?.email?.split("@")[0]
+
   return (
     <div className="min-h-screen bg-gray-950 text-white p-8 space-y-8">
 
@@ -79,7 +82,11 @@ export default function DashboardPage() {
         <div>
           <p className="text-green-400 text-sm font-medium uppercase tracking-widest mb-1">Security Dashboard</p>
           <h1 className="text-3xl font-bold text-white">
-            {user ? <>{greeting}, {user.full_name || user.email} </> : <span className="text-gray-600 animate-pulse">Loading...</span>}
+            {user ? (
+              <>{greeting}, {displayName}</>
+            ) : (
+              <span className="text-gray-600 animate-pulse">Loading...</span>
+            )}
           </h1>
           <p className="text-gray-500 mt-1 text-sm">Here's your real-time cloud security overview.</p>
         </div>

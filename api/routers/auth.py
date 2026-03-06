@@ -14,7 +14,7 @@ def register(payload: UserRegister, db: Session = Depends(get_db)):
     ).first()
     if user is not None:
         raise HTTPException(status_code=400, detail="Email already registered")
-    user = User(email=payload.email, hashed_password=hash_password(payload.password))
+    user = User(email=payload.email, full_name=payload.full_name, hashed_password=hash_password(payload.password))
     db.add(user)
     db.commit()
     db.refresh(user)
