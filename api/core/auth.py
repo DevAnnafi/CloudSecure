@@ -10,7 +10,7 @@ from api.core.database import get_db
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 SECRET_KEY="3289rh2u9nnf9d1b2n3#(@(@#(@#RBNF@(@#U#@))))"
 ALGORITHM="HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES=1440
+ACCESS_TOKEN_EXPIRE_MINUTES=60 * 24 * 7
 
 def hash_password(password: str) -> str:
     return pwd_context.hash(password)

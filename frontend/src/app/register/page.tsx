@@ -15,6 +15,13 @@ export default function Register() {
     async function handleRegister() {
         try {
             setLoading(true)
+
+            if (!fullName.trim() || !email.trim() || !password.trim()) 
+            {
+            setError("All fields are required")
+            return
+            }
+
             const response = await fetch("http://localhost:8000/auth/register", {
                 method: "POST",
                 headers: { "Content-Type": "application/json"},
