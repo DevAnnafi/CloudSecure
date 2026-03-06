@@ -17,6 +17,7 @@ class Scan(Base):
     high_count = Column(Integer, default=0)
     medium_count = Column(Integer, default=0)
     low_count = Column(Integer, default=0)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=True)
 
     account = relationship("Account", back_populates="scans")
     findings = relationship("Finding", back_populates="scan")
