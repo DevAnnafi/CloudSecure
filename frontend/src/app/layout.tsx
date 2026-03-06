@@ -39,6 +39,9 @@ export default function RootLayout({
             <Link href="/" className="hover:text-green-400 transition-colors">
               Scans
             </Link>
+            <Link href="/settings" className="hover:text-green-400 transition-colors">
+              Settings
+            </Link>
           </div>
         </nav>
 
