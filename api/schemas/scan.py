@@ -20,8 +20,7 @@ class ScanResponse(BaseModel):
     medium_count: int
     low_count: int
 
-    class Config:
-        from_attributes = True
+    model_config = {"from_attributes": True}
 
 class FindingResponse(BaseModel):
     id: int
