@@ -287,8 +287,8 @@ python src/cli.py scan \
 - ✅ Findings table
 - ✅ Create scan form
 - ✅ Dashboard home
-- ⏳ Remediation suggestions
-- ⏳ Charts & visualizations
+- ✅ Remediation suggestions
+- ✅ Charts & visualizations
 
 ### Phase 2: Authentication & Launch (Week 6)
 - User registration/login
