@@ -6,6 +6,8 @@ from api.core.database import engine, Base
 from api.models import Account, Finding, Scan
 from api.routers import dashboard
 from api.routers import accounts
+from api.routers import auth
+from api.models.user import User
 
 
 Base.metadata.create_all(bind=engine)
@@ -28,6 +30,7 @@ app.include_router(scans.router)
 app.include_router(findings.router)
 app.include_router(dashboard.router)
 app.include_router(accounts.router)
+app.include_router(auth.router)
 
 @app.get("/")
 def root():
