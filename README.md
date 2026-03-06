@@ -291,11 +291,11 @@ python src/cli.py scan \
 - ✅ Charts & visualizations
 
 ### Phase 2: Authentication & Launch (Week 6)
-- User registration/login
-- JWT authentication
-- User-specific scans
-- Landing page
-- Pricing tiers (Free/Pro/Enterprise)
+- ✅ User registration/login
+- ✅ JWT authentication
+- ✅ User-specific scans
+- ✅ Landing page
+- ✅ Pricing tiers (Free/Pro/Enterprise)
 
 ### Phase 3: Deployment (Week 7)
 - Backend: Railway/Render

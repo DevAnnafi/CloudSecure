@@ -1,5 +1,5 @@
 from api.core.database import Base
-from sqlalchemy import Column, Integer, String, DateTime, Boolean
+from sqlalchemy import Column, Integer, String, DateTime, Boolean, Text
 from datetime import datetime, timezone
 
 class User(Base):
@@ -11,3 +11,4 @@ class User(Base):
     full_name = Column(String, nullable=True)
     is_active = Column(Boolean, default=True)
     created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
+    avatar = Column(Text, nullable=True)

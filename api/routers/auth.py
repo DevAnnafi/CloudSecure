@@ -31,3 +31,13 @@ def login(payload: UserLogin, db: Session = Depends(get_db)):
         raise HTTPException(status_code=400, detail="Incorrect email or password")
     access_token = create_access_token({"sub": matched_user.email})
     return {"access_token": access_token, "token_type": "bearer"}
+
+@router.put("/me/avatar")
+def update_avatar(payload: dict, current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+    current_user.avatar = payload.get("avatar")
+    db.commit()
+    return {"message": "Avatar updated"}
+
+@router.get("/me", response_model=UserResponse)
+def get_me(current_user: User = Depends(get_current_user)):
+    return current_user
