@@ -3,20 +3,24 @@
 import { useEffect, useState } from "react"
 import { getDashboard } from "@/lib/api"
 import Link from "next/link"
+import {
+  PieChart, Pie, Cell, Tooltip, ResponsiveContainer,
+  LineChart, Line, XAxis, YAxis, CartesianGrid
+} from "recharts"
 
 export default function DashboardPage() {
   const [data, setData] = useState<any>(null)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-  getDashboard()
-    .then(setData)
-    .catch((err) => {
-      console.error("Dashboard fetch error:", err)
-      setLoading(false)
-    })
-    .finally(() => setLoading(false))
-}, [])
+    getDashboard()
+      .then(setData)
+      .catch((err) => {
+        console.error("Dashboard fetch error:", err)
+        setLoading(false)
+      })
+      .finally(() => setLoading(false))
+  }, [])
 
   if (loading) return <div className="p-8 text-gray-500">Loading dashboard...</div>
   if (!data)   return <div className="p-8 text-red-500">Failed to load dashboard.</div>
@@ -24,6 +28,20 @@ export default function DashboardPage() {
   const scoreColor =
     data.security_score >= 80 ? "text-green-500" :
     data.security_score >= 60 ? "text-yellow-500" : "text-red-500"
+
+  const severityData = [
+    { name: "Critical", value: data.severity.critical, color: "#ef4444" },
+    { name: "High",     value: data.severity.high,     color: "#f97316" },
+    { name: "Medium",   value: data.severity.medium,   color: "#eab308" },
+    { name: "Low",      value: data.severity.low,       color: "#60a5fa" },
+  ].filter(d => d.value > 0)
+
+  const scoreTrendData = [...data.recent_scans]
+    .reverse()
+    .map((scan: any) => ({
+      date: new Date(scan.started_at).toLocaleDateString(),
+      score: scan.score ?? 0,
+    }))
 
   return (
     <div className="p-8 space-y-8 bg-gray-50 min-h-screen">
@@ -64,6 +82,70 @@ export default function DashboardPage() {
           <p className="text-sm text-gray-500 mb-1">Total Scans</p>
           <p className="text-4xl font-bold text-gray-700">{data.total_scans}</p>
         </div>
+      </div>
+
+      {/* Charts Row */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+        {/* Severity Donut Chart */}
+        <div className="bg-white rounded-xl shadow p-6">
+          <h2 className="text-lg font-semibold text-gray-700 mb-4">Findings by Severity</h2>
+          {severityData.length === 0 ? (
+            <p className="text-gray-400 text-center py-8">No findings</p>
+          ) : (
+            <ResponsiveContainer width="100%" height={250}>
+              <PieChart>
+                <Pie
+                  data={severityData}
+                  cx="50%"
+                  cy="50%"
+                  innerRadius={60}
+                  outerRadius={100}
+                  paddingAngle={3}
+                  dataKey="value"
+                >
+                  {severityData.map((entry, index) => (
+                    <Cell key={index} fill={entry.color} />
+                  ))}
+                </Pie>
+                <Tooltip formatter={(value, name) => [value, name]} />
+              </PieChart>
+            </ResponsiveContainer>
+          )}
+          <div className="flex justify-center gap-4 mt-2">
+            {severityData.map((entry) => (
+              <div key={entry.name} className="flex items-center gap-1">
+                <div className="w-3 h-3 rounded-full" style={{ backgroundColor: entry.color }} />
+                <span className="text-xs text-gray-500">{entry.name}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Score Trend Line Chart */}
+        <div className="bg-white rounded-xl shadow p-6">
+          <h2 className="text-lg font-semibold text-gray-700 mb-4">Score Trend</h2>
+          {scoreTrendData.length === 0 ? (
+            <p className="text-gray-400 text-center py-8">No scan history</p>
+          ) : (
+            <ResponsiveContainer width="100%" height={250}>
+              <LineChart data={scoreTrendData}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+                <XAxis dataKey="date" tick={{ fontSize: 11 }} />
+                <YAxis domain={[0, 100]} tick={{ fontSize: 11 }} />
+                <Tooltip />
+                <Line
+                  type="monotone"
+                  dataKey="score"
+                  stroke="#3b82f6"
+                  strokeWidth={2}
+                  dot={{ fill: "#3b82f6", r: 4 }}
+                />
+              </LineChart>
+            </ResponsiveContainer>
+          )}
+        </div>
+
       </div>
 
       {/* Cloud Coverage */}
