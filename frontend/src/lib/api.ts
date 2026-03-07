@@ -1,4 +1,6 @@
-const API_BASE = "https://cloudsecure-production.up.railway.app";
+const API_BASE =
+  process.env.NEXT_PUBLIC_API_URL ||
+  "https://cloudsecure-production.up.railway.app";
 
 export async function getDashboard() {
   const token = localStorage.getItem("token")
@@ -14,17 +16,17 @@ export async function getScans() {
   const res = await fetch(`${API_BASE}/scans`, {
     headers: { "Authorization": `Bearer ${token}` }
   })
-  if (!res.ok) throw new Error("Failed to fetch scans");
-  return res.json();
+  if (!res.ok) throw new Error("Failed to fetch scans")
+  return res.json()
 }
 
 export async function getScan(id: number) {
   const token = localStorage.getItem("token")
   const res = await fetch(`${API_BASE}/scans/${id}`, {
     headers: { "Authorization": `Bearer ${token}`}
-  });
-  if (!res.ok) throw new Error("Failed to fetch scan");
-  return res.json();
+  })
+  if (!res.ok) throw new Error("Failed to fetch scan")
+  return res.json()
 }
 
 export async function createScan(accountId: number) {
@@ -35,33 +37,41 @@ export async function createScan(accountId: number) {
       "Content-Type": "application/json",
       "Authorization": `Bearer ${token}`
     },
-    body: JSON.stringify({ account_id: accountId }),
-  });
-  if (!res.ok) throw new Error("Failed to create scan");
-  return res.json();
+    body: JSON.stringify({ account_id: accountId })
+  })
+
+  if (!res.ok) {
+    const text = await res.text()
+    throw new Error(text || "Failed to create scan")
+  }
+
+  return res.json()
 }
 
 export async function getFindings(scanId: number) {
   const token = localStorage.getItem("token")
   const res = await fetch(`${API_BASE}/findings/${scanId}`, {
     headers: { "Authorization": `Bearer ${token}`}
-  });
-  if (!res.ok) throw new Error("Failed to fetch findings");
-  return res.json();
+  })
+  if (!res.ok) throw new Error("Failed to fetch findings")
+  return res.json()
 }
 
 export async function getMe() {
   const token = localStorage.getItem("token")
   if (!token) return null
+
   const res = await fetch(`${API_BASE}/auth/me`, {
     headers: { "Authorization": `Bearer ${token}` }
   })
+
   if (!res.ok) return null
   return res.json()
 }
 
 export async function updateAvatar(base64: string) {
   const token = localStorage.getItem("token")
+
   const res = await fetch(`${API_BASE}/auth/me/avatar`, {
     method: "PUT",
     headers: {
@@ -70,12 +80,18 @@ export async function updateAvatar(base64: string) {
     },
     body: JSON.stringify({ avatar: base64 })
   })
-  if (!res.ok) return null
+
+  if (!res.ok) {
+    const text = await res.text()
+    throw new Error(text || "Failed to update avatar")
+  }
+
   return res.json()
 }
 
 export async function updateProfile(data: { full_name?: string; email?: string }) {
   const token = localStorage.getItem("token")
+
   const res = await fetch(`${API_BASE}/auth/me`, {
     method: "PUT",
     headers: {
@@ -84,12 +100,18 @@ export async function updateProfile(data: { full_name?: string; email?: string }
     },
     body: JSON.stringify(data)
   })
-  if (!res.ok) return null
+
+  if (!res.ok) {
+    const text = await res.text()
+    throw new Error(text || "Failed to update profile")
+  }
+
   return res.json()
 }
 
 export async function updatePassword(current_password: string, new_password: string) {
   const token = localStorage.getItem("token")
+
   const res = await fetch(`${API_BASE}/auth/me/password`, {
     method: "PUT",
     headers: {
@@ -98,6 +120,11 @@ export async function updatePassword(current_password: string, new_password: str
     },
     body: JSON.stringify({ current_password, new_password })
   })
-  if (!res.ok) throw new Error("Incorrect current password")
+
+  if (!res.ok) {
+    const text = await res.text()
+    throw new Error(text || "Incorrect current password")
+  }
+
   return res.json()
 }
