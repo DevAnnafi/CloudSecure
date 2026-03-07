@@ -13,11 +13,14 @@ ALGORITHM="HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES=60 * 24 * 7
 
 def hash_password(password: str) -> str:
-    if len(password.encode('utf-8')) > 72:
-        return pwd_context.hash(password)
+    password = password[:72]
+    hashed = pwd_context.hash(password)
+    if not hashed:
+        raise ValueError("Password hashing failed")
+    return hashed
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
-    return pwd_context.verify(plain_password, hashed_password)
+    return pwd_context.verify(plain_password[:72], hashed_password)
 
 def create_access_token(data: dict, expires_delta: timedelta = None):
     to_encode = data.copy()

@@ -26,7 +26,7 @@ export default function ScansPage() {
   useEffect(() => {
     const token = localStorage.getItem("token")
     if (!token) { router.push("/login"); return }
-    fetch('{API_URL}/scans/', {
+    fetch(`{API_URL}/scans/`, {
       headers: { "Authorization": `Bearer ${token}` }
     })
       .then(res => res.json())
