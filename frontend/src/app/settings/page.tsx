@@ -37,7 +37,7 @@ export default function SettingsPage() {
 
   const fetchAccounts = () => {
     const token = localStorage.getItem("token")
-    fetch("http://localhost:8000/accounts", {
+    fetch("https://cloud-secure-2kuhbpxtn-devannafis-projects.vercel.app/accounts", {
       headers: { "Authorization": `Bearer ${token}` }
     })
       .then(res => res.json())
@@ -55,7 +55,7 @@ export default function SettingsPage() {
     if (!accountId || !accountName) return
     setSaving(true)
     const token = localStorage.getItem("token")
-    await fetch("http://localhost:8000/accounts", {
+    await fetch("https://cloud-secure-2kuhbpxtn-devannafis-projects.vercel.app/accounts", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -78,7 +78,7 @@ export default function SettingsPage() {
   const handleDelete = async (id: number) => {
     setDeletingId(id)
     const token = localStorage.getItem("token")
-    await fetch(`http://localhost:8000/accounts/${id}`, {
+    await fetch(`https://cloud-secure-2kuhbpxtn-devannafis-projects.vercel.app/accounts/${id}`, {
       method: "DELETE",
       headers: { "Authorization": `Bearer ${token}` }
     })
