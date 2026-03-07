@@ -48,7 +48,7 @@ export default function CreateScan() {
     setError(null)
     try {
       const token = localStorage.getItem("token")
-      const response = await fetch('http://localhost:8000/scans', {
+      const response = await fetch('https://cloudsecure-production.up.railway.app/scans', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
