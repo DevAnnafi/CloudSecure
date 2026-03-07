@@ -3,6 +3,8 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+
 interface Scan {
   id: number;
   status: string;
@@ -24,7 +26,7 @@ export default function ScansPage() {
   useEffect(() => {
     const token = localStorage.getItem("token")
     if (!token) { router.push("/login"); return }
-    fetch('http://localhost:8000/scans/', {
+    fetch('{API_URL}/scans/', {
       headers: { "Authorization": `Bearer ${token}` }
     })
       .then(res => res.json())

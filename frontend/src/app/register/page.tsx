@@ -1,122 +1,131 @@
-"use client"
+'use client';
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
 
-export default function Register() { 
-    const [email, setEmail] = useState<string>("")
-    const [password, setPassword] = useState<string>("")
-    const [error, setError] = useState<string | null>(null)
-    const [loading, setLoading] = useState(false)
-    const [fullName, setFullName] = useState<string>("")
+export default function RegisterPage() {
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [username, setUsername] = useState('');
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
+  const router = useRouter();
 
-    const router = useRouter()
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError('');
+    setLoading(true);
 
-    async function handleRegister() {
-        try {
-            setLoading(true)
+    try {
+      const res = await fetch(`${API_URL}/auth/register`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password, username }),
+      });
 
-            if (!fullName.trim() || !email.trim() || !password.trim()) 
-            {
-            setError("All fields are required")
-            return
-            }
+      const data = await res.json();
 
-            const response = await fetch("https://cloud-secure-2kuhbpxtn-devannafis-projects.vercel.app/auth/register", {
-                method: "POST",
-                headers: { "Content-Type": "application/json"},
-                body: JSON.stringify({email, password, full_name: fullName})
-            })
+      if (!res.ok) {
+        throw new Error(data.detail || 'Registration failed');
+      }
 
-            if (!response.ok) {
-                setError("Invalid email or password")
-                return
-            }
-
-            const data = await response.json()
-
-            router.push("/login")
-        }
-
-        catch {
-            setError("Something went wrong")
-        }
-
-        finally {
-            setLoading(false)
-
-        }
-            
-    }
-
-    return (
-  <div className="min-h-screen bg-gray-950 flex items-center justify-center">
-    <div className="bg-gray-900 border border-gray-800 rounded-2xl p-10 w-full max-w-md shadow-2xl">
+      // Store token
+      localStorage.setItem('token', data.access_token);
       
-      <div className="mb-8 text-center">
-        <h1 className="text-2xl font-bold text-white mt-3">CloudSecure</h1>
-        <p className="text-gray-400 text-sm mt-1">Create your account</p>
+      // Redirect to dashboard
+      router.push('/dashboard');
+    } catch (err: any) {
+      setError(err.message || 'Registration failed');
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-gray-950 flex items-center justify-center px-4">
+      <div className="max-w-md w-full space-y-8">
+        <div>
+          <h2 className="text-center text-3xl font-bold text-white">
+            Create your account
+          </h2>
+          <p className="mt-2 text-center text-sm text-gray-400">
+            Or{' '}
+            <Link href="/login" className="text-green-400 hover:text-green-300">
+              sign in to existing account
+            </Link>
+          </p>
+        </div>
+
+        <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
+          {error && (
+            <div className="bg-red-900/50 border border-red-800 text-red-400 px-4 py-3 rounded">
+              {error}
+            </div>
+          )}
+
+          <div className="space-y-4">
+            <div>
+              <label htmlFor="username" className="block text-sm font-medium text-gray-300 mb-2">
+                Username
+              </label>
+              <input
+                id="username"
+                name="username"
+                type="text"
+                required
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                className="w-full px-3 py-2 bg-gray-900 border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-green-500"
+                placeholder="johndoe"
+              />
+            </div>
+
+            <div>
+              <label htmlFor="email" className="block text-sm font-medium text-gray-300 mb-2">
+                Email address
+              </label>
+              <input
+                id="email"
+                name="email"
+                type="email"
+                required
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="w-full px-3 py-2 bg-gray-900 border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-green-500"
+                placeholder="you@example.com"
+              />
+            </div>
+
+            <div>
+              <label htmlFor="password" className="block text-sm font-medium text-gray-300 mb-2">
+                Password
+              </label>
+              <input
+                id="password"
+                name="password"
+                type="password"
+                required
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="w-full px-3 py-2 bg-gray-900 border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-green-500"
+                placeholder="••••••••"
+                minLength={8}
+              />
+              <p className="mt-1 text-xs text-gray-500">Minimum 8 characters</p>
+            </div>
+          </div>
+
+          <button
+            type="submit"
+            disabled={loading}
+            className="w-full py-3 px-4 bg-green-500 hover:bg-green-400 text-black font-semibold rounded-lg transition disabled:bg-gray-600 disabled:cursor-not-allowed"
+          >
+            {loading ? 'Creating account...' : 'Create account'}
+          </button>
+        </form>
       </div>
-
-      {error && (
-        <div className="bg-red-900/40 border border-red-500 text-red-400 text-sm rounded-lg px-4 py-3 mb-6">
-          {error}
-        </div>
-      )}
-
-      <div className="space-y-4">
-        <div>
-          <label className="block text-sm text-gray-400 mb-1">Full Name</label>
-          <input
-            type="text"
-            value={fullName}
-            onChange={e => setFullName(e.target.value)}
-            placeholder="John Smith"
-            className="w-full px-4 py-2.5 bg-gray-800 border border-gray-700 rounded-lg text-white text-sm placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-green-500"
-          />
-        </div>
-
-        <div>
-          <label className="block text-sm text-gray-400 mb-1">Email</label>
-          <input
-            type="email"
-            value={email}
-            onChange={e => setEmail(e.target.value)}
-            placeholder="you@example.com"
-            className="w-full px-4 py-2.5 bg-gray-800 border border-gray-700 rounded-lg text-white text-sm placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-green-500"
-          />
-        </div>
-
-        <div>
-          <label className="block text-sm text-gray-400 mb-1">Password</label>
-          <input
-            type="password"
-            value={password}
-            onChange={e => setPassword(e.target.value)}
-            placeholder="••••••••"
-            className="w-full px-4 py-2.5 bg-gray-800 border border-gray-700 rounded-lg text-white text-sm placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-green-500"
-          />
-        </div>
-
-        <button
-          onClick={handleRegister}
-          disabled={loading}
-          className="w-full py-2.5 bg-green-500 hover:bg-green-400 disabled:bg-gray-600 disabled:cursor-not-allowed text-black font-semibold rounded-lg text-sm transition mt-2"
-        >
-          {loading ? "Creating account..." : "Register"}
-        </button>
-      </div>
-
-      <p className="text-center text-gray-500 text-sm mt-6">
-        Already have an account?{" "}
-        <a href="/login" className="text-green-400 hover:underline">Sign in</a>
-      </p>
-
     </div>
-  </div>
-)
-
+  );
 }
-
-
