@@ -3,10 +3,7 @@
 import { useEffect, useState } from "react"
 import { getDashboard, getMe } from "@/lib/api"
 import Link from "next/link"
-import {
-  PieChart, Pie, Cell, Tooltip, ResponsiveContainer,
-  LineChart, Line, XAxis, YAxis, CartesianGrid, Area, AreaChart
-} from "recharts"
+import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer, LineChart, Line, XAxis, YAxis, CartesianGrid, Area, AreaChart } from "recharts"
 import { useRouter } from 'next/navigation'
 
 export default function DashboardPage() {
