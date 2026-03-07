@@ -16,7 +16,7 @@ export default function Login() {
     async function handleLogin() {
         try {
             setLoading(true)
-            const response = await fetch("${API_URL}/auth/login", {
+            const response = await fetch(`${API_URL}/auth/login`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json"},
                 body: JSON.stringify({email, password})
