@@ -47,12 +47,17 @@ export default function CreateScan() {
     setLoading(true)
     setError(null)
     try {
-      const token = localStorage.getItem("token")
-      const response = await fetch('https://cloudsecure-production.up.railway.app/scans', {
+     const token = localStorage.getItem("token")
+     if (!token) {
+        setError("You must be logged in.")
+        return
+    }
+
+     const response = await fetch('https://cloudsecure-production.up.railway.app/scans/', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
+          Authorization: `Bearer ${token}`
         },
         body: JSON.stringify({
           cloud_provider: cloudProvider,
@@ -60,9 +65,15 @@ export default function CreateScan() {
           account_name: accountName,
           profile: profile || undefined
         })
-      });
-      const data = await response.json();
-      router.push(`/scans/${data.id}`);
+      })
+
+      if (!response.ok) {
+        const err = await response.text()
+        throw new Error(err)
+      }
+
+      const data = await response.json()
+      router.push(`/scans/${data.id}`)
     } catch {
       setError("Failed to create scan. Please try again.")
       setLoading(false)
