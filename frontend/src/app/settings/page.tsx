@@ -3,6 +3,8 @@
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+
 interface Account {
   id: number
   cloud_provider: string
@@ -37,7 +39,7 @@ export default function SettingsPage() {
 
   const fetchAccounts = () => {
     const token = localStorage.getItem("token")
-    fetch("https://cloud-secure-2kuhbpxtn-devannafis-projects.vercel.app/accounts", {
+    fetch(`${API_URL}/accounts`, {
       headers: { "Authorization": `Bearer ${token}` }
     })
       .then(res => res.json())
@@ -55,7 +57,7 @@ export default function SettingsPage() {
     if (!accountId || !accountName) return
     setSaving(true)
     const token = localStorage.getItem("token")
-    await fetch("https://cloud-secure-2kuhbpxtn-devannafis-projects.vercel.app/accounts", {
+    await fetch(`${API_URL}/accounts`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -78,7 +80,7 @@ export default function SettingsPage() {
   const handleDelete = async (id: number) => {
     setDeletingId(id)
     const token = localStorage.getItem("token")
-    await fetch(`https://cloud-secure-2kuhbpxtn-devannafis-projects.vercel.app/accounts/${id}`, {
+    await fetch(`${API_URL}/accounts/${id}`, {
       method: "DELETE",
       headers: { "Authorization": `Bearer ${token}` }
     })

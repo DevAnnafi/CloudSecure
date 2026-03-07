@@ -3,6 +3,8 @@
 import { useParams, useRouter } from "next/navigation";
 import React, { useState, useEffect } from "react";
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+
 interface Scan {
   id: number;
   status: string;
@@ -65,7 +67,7 @@ export default function ScanDetailPage() {
 
   useEffect(() => {
     if (!token) { router.push("/login"); return }
-    fetch(`http://localhost:8000/scans/${scanId}`, { headers: { "Authorization": `Bearer ${token}` } })
+    fetch(`${API_URL}/scans/${scanId}`, { headers: { "Authorization": `Bearer ${token}` } })
       .then(r => r.json())
       .then(data => { setScan(data); setLoading(false); })
       .catch(() => setLoading(false));
@@ -73,7 +75,7 @@ export default function ScanDetailPage() {
 
   useEffect(() => {
     if (!scan || !token) return;
-    fetch(`http://localhost:8000/findings/${scanId}`, { headers: { "Authorization": `Bearer ${token}` } })
+    fetch(`${API_URL}/findings/${scanId}`, { headers: { "Authorization": `Bearer ${token}` } })
       .then(r => r.json())
       .then(setFindings)
       .catch(console.error);
