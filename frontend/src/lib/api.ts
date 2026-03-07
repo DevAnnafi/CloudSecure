@@ -1,4 +1,4 @@
-const API_BASE = "http://localhost:8000";
+const API_BASE = "https://cloudsecure-production.up.railway.app";
 
 export async function getDashboard() {
   const token = localStorage.getItem("token")
