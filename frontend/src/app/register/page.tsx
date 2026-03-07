@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 
+
 export default function Register() { 
     const [email, setEmail] = useState<string>("")
     const [password, setPassword] = useState<string>("")
