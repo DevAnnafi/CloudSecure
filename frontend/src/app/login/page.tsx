@@ -15,7 +15,7 @@ export default function Login() {
     async function handleLogin() {
         try {
             setLoading(true)
-            const response = await fetch("http://localhost:8000/auth/login", {
+            const response = await fetch("https://cloud-secure-2kuhbpxtn-devannafis-projects.vercel.app/auth/login", {
                 method: "POST",
                 headers: { "Content-Type": "application/json"},
                 body: JSON.stringify({email, password})
