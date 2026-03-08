@@ -109,7 +109,7 @@ def reset_password(request: ResetPasswordRequest, db: Session = Depends(get_db))
         raise HTTPException(status_code=400, detail="Invalid or expired reset token")
     
     # Check if token expired
-    if user.reset_token_expires < datetime.utcnow():
+    if user.reset_token_expires < datetime.now(timezone.utc):
         raise HTTPException(status_code=400, detail="Reset token has expired")
     
     # Validate password length
@@ -133,7 +133,7 @@ def verify_reset_token(token: str, db: Session = Depends(get_db)):
     """Verify if a reset token is valid (used by frontend)"""
     user = db.query(User).filter(User.reset_token == token).first()
     
-    if not user or user.reset_token_expires < datetime.utcnow():
+    if not user or user.reset_token_expires < datetime.now(timezone.utc):
         raise HTTPException(status_code=400, detail="Invalid or expired token")
     
     return {"valid": True, "email": user.email}
