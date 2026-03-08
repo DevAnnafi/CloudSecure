@@ -57,17 +57,34 @@ export default function ProfilePage() {
     }
   }
 
-  async function handleAvatarChange(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0]
-    if (!file) return
-    const reader = new FileReader()
-    reader.onload = async () => {
-      const base64 = reader.result as string
-      await updateAvatar(base64)
-      setUser((prev: any) => ({ ...prev, avatar: base64 }))
+async function handleAvatarChange(e: React.ChangeEvent<HTMLInputElement>) {
+  const file = e.target.files?.[0]
+  if (!file) return
+
+  const reader = new FileReader()
+  reader.onload = async () => {
+    const img = new Image()
+    img.onload = async () => {
+      const canvas = document.createElement("canvas")
+      const MAX = 256
+      const scale = Math.min(MAX / img.width, MAX / img.height, 1)
+      canvas.width = img.width * scale
+      canvas.height = img.height * scale
+      const ctx = canvas.getContext("2d")!
+      ctx.drawImage(img, 0, 0, canvas.width, canvas.height)
+      const base64 = canvas.toDataURL("image/jpeg", 0.8)
+      try {
+        await updateAvatar(base64)
+        setUser((prev: any) => ({ ...prev, avatar: base64 }))
+        setProfileMsg("Photo updated successfully!")
+      } catch {
+        setProfileError("Failed to update photo.")
+      }
     }
-    reader.readAsDataURL(file)
+    img.src = reader.result as string
   }
+  reader.readAsDataURL(file)
+}
 
   const initials = user?.full_name
     ? user.full_name.split(" ").map((n: string) => n[0]).join("").toUpperCase()
