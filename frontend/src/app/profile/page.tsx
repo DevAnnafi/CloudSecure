@@ -31,9 +31,13 @@ export default function ProfilePage() {
   async function handleProfileSave() {
     setProfileMsg(null)
     setProfileError(null)
-    const res = await updateProfile({ full_name: fullName, email })
-    if (res) setProfileMsg("Profile updated successfully!")
-    else setProfileError("Failed to update profile.")
+    try {
+      const res = await updateProfile({ full_name: fullName, email })
+      if (res) setProfileMsg("Profile updated successfully!")
+      else setProfileError("Failed to update profile.")
+    } catch (e: any) {
+      setProfileError(e.message || "Failed to update profile.")
+    }
   }
 
   async function handlePasswordSave() {
