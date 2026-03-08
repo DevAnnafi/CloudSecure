@@ -13,10 +13,16 @@ export default function Navbar() {
   const [dropdownOpen, setDropdownOpen] = useState(false)
   const dropdownRef = useRef<HTMLDivElement>(null)
 
-  useEffect(() => {
+useEffect(() => {
+  getMe().then(setUser).catch(() => null)
+  getDashboard().then(setDashData).catch(() => null)
+
+  function handleAvatarUpdate() {
     getMe().then(setUser).catch(() => null)
-    getDashboard().then(setDashData).catch(() => null)
-  }, [])
+  }
+  window.addEventListener("avatar-updated", handleAvatarUpdate)
+  return () => window.removeEventListener("avatar-updated", handleAvatarUpdate)
+}, [])
 
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
