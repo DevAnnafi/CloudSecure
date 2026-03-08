@@ -305,6 +305,7 @@ python src/cli.py scan \
 - ✅ Go live!
 
 ### Phase 4: Growth (Month 2+)
+- Drift Detection
 - Beta user onboarding
 - Email notifications
 - Slack integration
