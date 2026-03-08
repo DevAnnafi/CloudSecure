@@ -65,22 +65,23 @@ async function handleAvatarChange(e: React.ChangeEvent<HTMLInputElement>) {
   reader.onload = async () => {
     const img = new Image()
     img.onload = async () => {
-      const canvas = document.createElement("canvas")
-      const MAX = 256
-      const scale = Math.min(MAX / img.width, MAX / img.height, 1)
-      canvas.width = img.width * scale
-      canvas.height = img.height * scale
-      const ctx = canvas.getContext("2d")!
-      ctx.drawImage(img, 0, 0, canvas.width, canvas.height)
-      const base64 = canvas.toDataURL("image/jpeg", 0.8)
-      try {
-        await updateAvatar(base64)
-        setUser((prev: any) => ({ ...prev, avatar: base64 }))
-        setProfileMsg("Photo updated successfully!")
-      } catch {
-        setProfileError("Failed to update photo.")
-      }
+    const canvas = document.createElement("canvas")
+    const MAX = 256
+    const scale = Math.min(MAX / img.width, MAX / img.height, 1)
+    canvas.width = img.width * scale
+    canvas.height = img.height * scale
+    const ctx = canvas.getContext("2d")!
+    ctx.drawImage(img, 0, 0, canvas.width, canvas.height)
+    const base64 = canvas.toDataURL("image/jpeg", 0.8)
+    try {
+      await updateAvatar(base64)
+      setUser((prev: any) => ({ ...prev, avatar: base64 }))
+      setProfileMsg("Photo updated successfully!")
+      window.dispatchEvent(new Event("avatar-updated"))
+    } catch {
+      setProfileError("Failed to update photo.")
     }
+  }
     img.src = reader.result as string
   }
   reader.readAsDataURL(file)
