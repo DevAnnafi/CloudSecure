@@ -2,6 +2,8 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
+
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://cloudsecure-production.up.railway.app';
 
@@ -90,6 +92,15 @@ export default function Login() {
         >
           {loading ? "Signing in..." : "Sign in"}
         </button>
+      </div>
+
+      <div className="text-center mt-6">
+        <p className="text-gray-400 text-sm">
+          Don't remember?{' '}
+          <Link href="/forgot-password" className="text-green-400 hover:text-green-300 font-medium">
+            Forgot password
+          </Link>
+        </p>
       </div>
 
       <p className="text-center text-gray-500 text-sm mt-6">
