@@ -80,7 +80,7 @@ def forgot_password(request: ForgotPasswordRequest, db: Session = Depends(get_db
     reset_token = secrets.token_urlsafe(32)
     
     # Token expires in 1 hour
-    expires = datetime.now(timezone) + timedelta(hours=1)
+    expires = datetime.now(timezone.utc) + timedelta(hours=1)
     
     # Save to database
     user.reset_token = reset_token
