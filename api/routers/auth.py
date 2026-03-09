@@ -1,4 +1,5 @@
 import secrets
+import os
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from api.core.database import get_db
@@ -87,14 +88,21 @@ def forgot_password(request: ForgotPasswordRequest, db: Session = Depends(get_db
     user.reset_token_expires = expires
     db.commit()
     
-    # Print reset link to Railway logs (for testing - replace with email later)
-    reset_link = f"https://cloud-secure-nine.vercel.app/reset-password?token={reset_token}"
+    # Get frontend URL from environment
+    frontend_url = os.environ.get('FRONTEND_URL', 'http://localhost:3000')
+    reset_link = f"{frontend_url}/reset-password?token={reset_token}"
+    
+    # Print reset link to Railway logs
     print(f"\n{'='*80}")
     print(f"PASSWORD RESET LINK FOR {user.email}:")
     print(f"{reset_link}")
     print(f"{'='*80}\n")
-        
-    send_password_reset_email(user.email, reset_link)
+    
+    # Send email
+    try:
+        send_password_reset_email(user.email, reset_link)
+    except Exception as e:
+        print(f"Email send failed: {e}")
     
     return {"message": "If that email exists, a reset link has been sent"}
 
@@ -108,15 +116,24 @@ def reset_password(request: ResetPasswordRequest, db: Session = Depends(get_db))
     if not user:
         raise HTTPException(status_code=400, detail="Invalid or expired reset token")
     
+    # Get current time (timezone-aware)
+    now = datetime.now(timezone.utc)
+    
+    # Ensure stored expiration is timezone-aware for comparison
+    expires = user.reset_token_expires
+    if expires.tzinfo is None:
+        # If database stored naive datetime, make it timezone-aware (assume UTC)
+        expires = expires.replace(tzinfo=timezone.utc)
+    
     # Check if token expired
-    if user.reset_token_expires < datetime.now(timezone.utc):
+    if expires < now:
         raise HTTPException(status_code=400, detail="Reset token has expired")
     
     # Validate password length
     if len(request.new_password) < 8:
         raise HTTPException(status_code=400, detail="Password must be at least 8 characters")
     
-    # Hash new password (using your existing hash_password function)
+    # Hash new password
     hashed_password = hash_password(request.new_password)
     
     # Update password and clear reset token
@@ -131,9 +148,23 @@ def reset_password(request: ResetPasswordRequest, db: Session = Depends(get_db))
 @router.get("/verify-reset-token/{token}")
 def verify_reset_token(token: str, db: Session = Depends(get_db)):
     """Verify if a reset token is valid (used by frontend)"""
+    # Find user with this token
     user = db.query(User).filter(User.reset_token == token).first()
     
-    if not user or user.reset_token_expires < datetime.now(timezone.utc):
+    if not user:
+        raise HTTPException(status_code=400, detail="Invalid or expired token")
+    
+    # Get current time (timezone-aware)
+    now = datetime.now(timezone.utc)
+    
+    # Ensure stored expiration is timezone-aware for comparison
+    expires = user.reset_token_expires
+    if expires.tzinfo is None:
+        # If database stored naive datetime, make it timezone-aware (assume UTC)
+        expires = expires.replace(tzinfo=timezone.utc)
+    
+    # Check if token expired
+    if expires < now:
         raise HTTPException(status_code=400, detail="Invalid or expired token")
     
     return {"valid": True, "email": user.email}
