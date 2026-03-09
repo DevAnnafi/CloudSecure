@@ -41,8 +41,8 @@ def send_password_reset_email(user_email: str, reset_link: str):
                     </div>
                     <div class="content">
                         <h2 style="color: #ffffff;">Reset Your Password</h2>
-                        <p>You requested to reset your password for your CloudSecure account.</p>
-                        <p>Click the button below to create a new password:</p>
+                        <p style="color: #ffffff;">You requested to reset your password for your CloudSecure account.</p>
+                        <p"color: #ffffff;">Click the button below to create a new password:</p>
                         <p style="text-align: center;">
                             <a href="{reset_link}" class="button">Reset Password</a>
                         </p>
