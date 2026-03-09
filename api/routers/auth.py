@@ -88,7 +88,7 @@ def forgot_password(request: ForgotPasswordRequest, db: Session = Depends(get_db
     db.commit()
     
     # Print reset link to Railway logs (for testing - replace with email later)
-    reset_link = f"https://cloud-secure-nine.vercel.app//reset-password?token={reset_token}"
+    reset_link = f"https://cloud-secure-nine.vercel.app/reset-password?token={reset_token}"
     print(f"\n{'='*80}")
     print(f"PASSWORD RESET LINK FOR {user.email}:")
     print(f"{reset_link}")
