@@ -100,62 +100,6 @@ def list_scans(skip: int = 0, limit: int = 20, db: Session = Depends(get_db), cu
    scans = db.query(Scan).filter(Scan.user_id == current_user.id).order_by(Scan.started_at.desc()).offset(skip).limit(limit).all()
    return scans
 
-@router.get("/{scan_id}", response_model=ScanResponse)
-def get_scan(scan_id: int, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
-   scan = db.query(Scan).filter(Scan.id == scan_id, Scan.user_id == current_user.id).first()
-   if scan is None:
-      raise HTTPException(status_code=404, detail="Scan not found")
-   return scan
-
-@router.delete("/{scan_id}")
-def delete_scan(scan_id: int, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
-   scan = db.query(Scan).filter(Scan.id == scan_id, Scan.user_id == current_user.id).first()
-   if scan is None:
-      raise HTTPException(status_code=404, detail="Scan not found")
-   db.query(Finding).filter(Finding.scan_id == scan_id).delete()
-   db.delete(scan)
-   db.commit()
-   return {"message": f"Scan {scan_id} deleted successfully"}
-
-@router.put("/{scan_id}/set-baseline")
-def set_baseline(
-    scan_id: int,
-    db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
-):
-    """Mark a scan as the baseline for drift detection"""
-    
-    # Get the scan and verify ownership
-    scan = db.query(Scan).filter(
-        Scan.id == scan_id,
-        Scan.user_id == current_user.id
-    ).first()
-    
-    if not scan:
-        raise HTTPException(status_code=404, detail="Scan not found")
-    
-    # Check if scan is completed
-    if scan.status != "completed":
-        raise HTTPException(status_code=400, detail="Can only set completed scans as baseline")
-    
-    # Unset any existing baseline for this account
-    db.query(Scan).filter(
-        Scan.account_id == scan.account_id,
-        Scan.is_baseline == True
-    ).update({"is_baseline": False})
-    
-    # Set this scan as baseline
-    scan.is_baseline = True
-    db.commit()
-    db.refresh(scan)
-    
-    return {
-        "message": "Baseline set successfully",
-        "scan_id": scan_id,
-        "score": scan.overall_score
-    }
-
-
 @router.get("/baseline")
 def get_baseline(
     account_id: int,
@@ -187,6 +131,12 @@ def get_baseline(
         }
     }
 
+@router.get("/{scan_id}", response_model=ScanResponse)
+def get_scan(scan_id: int, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+   scan = db.query(Scan).filter(Scan.id == scan_id, Scan.user_id == current_user.id).first()
+   if scan is None:
+      raise HTTPException(status_code=404, detail="Scan not found")
+   return scan
 
 @router.get("/{scan_id}/drift")
 def get_drift(
@@ -271,3 +221,52 @@ def get_drift(
         },
         "trend": "improving" if score_drift > 0 else "declining" if score_drift < 0 else "stable"
     }
+
+@router.put("/{scan_id}/set-baseline")
+def set_baseline(
+    scan_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """Mark a scan as the baseline for drift detection"""
+    
+    # Get the scan and verify ownership
+    scan = db.query(Scan).filter(
+        Scan.id == scan_id,
+        Scan.user_id == current_user.id
+    ).first()
+    
+    if not scan:
+        raise HTTPException(status_code=404, detail="Scan not found")
+    
+    # Check if scan is completed
+    if scan.status != "completed":
+        raise HTTPException(status_code=400, detail="Can only set completed scans as baseline")
+    
+    # Unset any existing baseline for this account
+    db.query(Scan).filter(
+        Scan.account_id == scan.account_id,
+        Scan.is_baseline == True
+    ).update({"is_baseline": False})
+    
+    # Set this scan as baseline
+    scan.is_baseline = True
+    db.commit()
+    db.refresh(scan)
+    
+    return {
+        "message": "Baseline set successfully",
+        "scan_id": scan_id,
+        "score": scan.overall_score
+    }
+
+@router.delete("/{scan_id}")
+def delete_scan(scan_id: int, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+   scan = db.query(Scan).filter(Scan.id == scan_id, Scan.user_id == current_user.id).first()
+   if scan is None:
+      raise HTTPException(status_code=404, detail="Scan not found")
+   db.query(Finding).filter(Finding.scan_id == scan_id).delete()
+   db.delete(scan)
+   db.commit()
+   return {"message": f"Scan {scan_id} deleted successfully"}
+
