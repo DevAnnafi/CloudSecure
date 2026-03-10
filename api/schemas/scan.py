@@ -10,6 +10,7 @@ class ScanCreate(BaseModel):
 
 class ScanResponse(BaseModel):
     id: int
+    account_id: int
     status: str
     started_at: datetime
     completed_at: Optional[datetime]
