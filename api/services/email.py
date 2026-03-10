@@ -8,7 +8,7 @@ def send_password_reset_email(user_email: str, reset_link: str):
     
     try:
         params = {
-            "from": "CloudSecure <onboarding@resend.dev>",  # Free tier sender
+            "from": "CloudSecure <no-reply@cloudsecure.me",  
             "to": [user_email],
             "subject": "CloudSecure - Reset Your Password",
             "html": f"""
