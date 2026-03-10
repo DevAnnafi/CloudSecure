@@ -1,5 +1,5 @@
 from api.core.database import Base
-from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, Float
+from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, Float, Boolean
 from sqlalchemy.orm import relationship
 from datetime import datetime, timezone
 
@@ -19,5 +19,9 @@ class Scan(Base):
     low_count = Column(Integer, default=0)
     user_id = Column(Integer, ForeignKey("users.id"), nullable=True)
 
+    is_baseline = Column(Boolean, default=False)
+    baseline_scan_id = Column(Integer, ForeignKey('scans.id'), nullable=True)
+
     account = relationship("Account", back_populates="scans")
-    findings = relationship("Finding", back_populates="scan")
+    findings = relationship("Finding", back_populates="scan", cascade="all, delete-orphan")
+    baseline = relationship("Scan", remote_side=[id], uselist=False)
