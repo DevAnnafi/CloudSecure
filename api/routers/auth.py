@@ -89,7 +89,7 @@ def forgot_password(request: ForgotPasswordRequest, db: Session = Depends(get_db
     db.commit()
     
     # Get frontend URL from environment
-    frontend_url = os.environ.get('FRONTEND_URL', 'http://localhost:3000')
+    frontend_url = os.environ.get('FRONTEND_URL', 'http://localhost:3000').rstrip('/')
     reset_link = f"{frontend_url}/reset-password?token={reset_token}"
     
     # Print reset link to Railway logs
