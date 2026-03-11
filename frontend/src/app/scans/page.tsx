@@ -16,6 +16,7 @@ interface Scan {
   high_count: number;
   medium_count: number;
   low_count: number;
+  is_baseline?: boolean;  
 }
 
 export default function ScansPage() {
@@ -92,7 +93,18 @@ export default function ScansPage() {
                     onClick={() => router.push(`/scans/${scan.id}`)}
                     className="border-b border-gray-800/50 hover:bg-gray-800/40 cursor-pointer transition"
                   >
-                    <td className="px-6 py-4 font-mono text-green-400">#{scan.id}</td>
+                    {/* ID Column with Baseline Badge */}
+                    <td className="px-6 py-4">
+                      <div className="flex items-center gap-2">
+                        <span className="font-mono text-green-400">#{scan.id}</span>
+                        {scan.is_baseline && (
+                          <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-yellow-900/50 text-yellow-400 border border-yellow-800">
+                            ⭐ Baseline
+                          </span>
+                        )}
+                      </div>
+                    </td>
+                    
                     <td className="px-6 py-4">
                       <span className={`px-2.5 py-1 rounded-full text-xs font-medium border ${
                         scan.status === 'completed' ? 'bg-green-900/50 text-green-400 border-green-800' :
