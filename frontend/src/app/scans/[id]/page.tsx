@@ -61,7 +61,6 @@ export default function ScanDetailPage() {
   const scanId = params.id as string;
 
   const [scan, setScan] = useState<Scan | null>(null);
-  const [findings, setFindings] = useState<Finding[]>([]);
   const [drift, setDrift] = useState<DriftData | null>(null);
   const [loading, setLoading] = useState(true);
   const [settingBaseline, setSettingBaseline] = useState(false);
@@ -87,16 +86,6 @@ export default function ScanDetailPage() {
       if (!scanRes.ok) throw new Error('Failed to fetch scan');
       const scanData = await scanRes.json();
       setScan(scanData);
-
-      // Fetch findings
-      const findingsRes = await fetch(`${API_URL}/findings?scan_id=${scanId}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-
-      if (findingsRes.ok) {
-        const findingsData = await findingsRes.json();
-        setFindings(findingsData);
-      }
 
       // Fetch drift if scan is completed and not baseline
       if (scanData.status === 'completed' && !scanData.is_baseline) {
@@ -376,44 +365,6 @@ export default function ScanDetailPage() {
             )}
           </div>
         )}
-
-        {/* Findings Table */}
-        <div className="bg-gray-900 border border-gray-800 rounded-lg p-6">
-          <h2 className="text-xl font-semibold mb-4">
-            Findings ({scan.total_findings})
-          </h2>
-
-          {findings.length === 0 ? (
-            <p className="text-gray-400 text-center py-8">No findings detected! </p>
-          ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead>
-                  <tr className="border-b border-gray-800">
-                    <th className="text-left py-3 px-4 text-gray-400 font-medium">Severity</th>
-                    <th className="text-left py-3 px-4 text-gray-400 font-medium">Title</th>
-                    <th className="text-left py-3 px-4 text-gray-400 font-medium">Resource</th>
-                    <th className="text-left py-3 px-4 text-gray-400 font-medium">Description</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {findings.map((finding) => (
-                    <tr key={finding.id} className="border-b border-gray-800 hover:bg-gray-800/50">
-                      <td className="py-3 px-4">
-                        <span className={`px-3 py-1 rounded-full text-sm border ${getSeverityColor(finding.severity)}`}>
-                          {finding.severity}
-                        </span>
-                      </td>
-                      <td className="py-3 px-4 font-medium">{finding.title}</td>
-                      <td className="py-3 px-4 text-gray-400 font-mono text-sm">{finding.resource}</td>
-                      <td className="py-3 px-4 text-gray-400">{finding.description}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </div>
       </div>
     </div>
   );
