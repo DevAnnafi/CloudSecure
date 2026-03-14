@@ -5,13 +5,15 @@ from datetime import datetime, timezone
 
 class Account(Base):
     __tablename__ = "accounts"
-
+    
     id = Column(Integer, primary_key=True, index=True)
-    user_id = Column(Integer, ForeignKey('users.id'), nullable=False)
+    user_id = Column(Integer, ForeignKey('users.id'), nullable=False, index=True)
     cloud_provider = Column(String, nullable=False)
     account_id = Column(String, nullable=False)
     account_name = Column(String, nullable=False)
     profile = Column(String, nullable=True)
     created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
-
+    
+    # Relationships
     scans = relationship("Scan", back_populates="account")
+    user = relationship("User")
