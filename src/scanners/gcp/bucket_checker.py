@@ -1,49 +1,67 @@
 from google.cloud import storage
+from google.oauth2 import service_account
 from core.enums import CloudProvider, Severity, FindingType
+import json
 
 class BucketScanner():
-    def __init__(self, project_id=None, account_name=None):
+    def __init__(self, service_account_json=None, project_id=None, account_name=None):
+        """
+        Initialize GCP Bucket Scanner with service account credentials
+        
+        Args:
+            service_account_json: JSON string of service account key
+            project_id: GCP project ID
+            account_name: Account name for reporting
+        """
         self.findings = []
         self.project_id = project_id
         self.account_name = account_name or "Default"
         
-        self.storage_client = storage.Client(project=project_id)
+        # Parse service account JSON and create credentials
+        if service_account_json:
+            sa_dict = json.loads(service_account_json)
+            credentials = service_account.Credentials.from_service_account_info(sa_dict)
+            self.storage_client = storage.Client(credentials=credentials, project=project_id)
+        else:
+            # Fallback to default credentials (for local testing)
+            self.storage_client = storage.Client(project=project_id)
 
     def scan(self):
         try:
             buckets = self.storage_client.list_buckets()
             for bucket in buckets:
                 self.check_bucket_iam_policy(bucket)
-        except:
-            pass
+        except Exception as e:
+            print(f"GCP Bucket scan error: {e}")
 
         return self.findings
 
-
     def check_bucket_iam_policy(self, bucket):
-        policy = bucket.get_iam_policy()
-        for binding in policy.bindings:
-            if 'allUsers'in binding['members']:
-                self.findings.append({
-                    "severity" : Severity.CRITICAL.value,
-                    "title" : "Public GCP Storage Bucket",
-                    "resource" : bucket.name,
-                    "cloud_provider": "GCP", 
-                    "account_id": self.project_id,  
-                    "account_name": self.account_name,
-                    "description" : f"Bucket allows public access via IAM policy"
-                })
-                
-            elif 'allAuthenticatedUsers' in binding['members']:
-                self.findings.append({
-                    "severity": Severity.HIGH.value,
-                    "title": "Public GCP Storage Bucket - Any Google Account Access",
-                    "resource": bucket.name,
-                    "cloud_provider": "GCP",
-                    "account_id": self.project_id,
-                    "account_name": self.account_name,
-                    "description": f"Bucket '{bucket.name}' allows access to any authenticated Google account via IAM policy (allAuthenticatedUsers)"
-                })
-
-
-            
+        try:
+            policy = bucket.get_iam_policy()
+            for binding in policy.bindings:
+                if 'allUsers' in binding['members']:
+                    self.findings.append({
+                        "severity": Severity.CRITICAL.value,
+                        "title": "Public GCP Storage Bucket",
+                        "resource": bucket.name,
+                        "cloud_provider": "GCP", 
+                        "account_id": self.project_id,  
+                        "account_name": self.account_name,
+                        "description": f"Bucket allows public access via IAM policy",
+                        "resource_id": f"gs://{bucket.name}"
+                    })
+                    
+                elif 'allAuthenticatedUsers' in binding['members']:
+                    self.findings.append({
+                        "severity": Severity.HIGH.value,
+                        "title": "Public GCP Storage Bucket - Any Google Account Access",
+                        "resource": bucket.name,
+                        "cloud_provider": "GCP",
+                        "account_id": self.project_id,
+                        "account_name": self.account_name,
+                        "description": f"Bucket '{bucket.name}' allows access to any authenticated Google account via IAM policy (allAuthenticatedUsers)",
+                        "resource_id": f"gs://{bucket.name}"
+                    })
+        except Exception as e:
+            print(f"Error checking bucket {bucket.name}: {e}")
