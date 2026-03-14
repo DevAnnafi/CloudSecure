@@ -17,10 +17,12 @@ class AccountCreate(BaseModel):
 
 @router.get("/accounts")
 def get_accounts(db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    """Get all accounts owned by current user"""
     return db.query(Account).filter(Account.user_id == current_user.id).all()
 
 @router.post("/accounts")
 def create_account(payload: AccountCreate, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    """Create a new account for current user"""
     account = Account(
         user_id=current_user.id,
         cloud_provider=payload.cloud_provider,
@@ -35,9 +37,10 @@ def create_account(payload: AccountCreate, db: Session = Depends(get_db), curren
 
 @router.delete("/accounts/{account_id}")
 def delete_account(account_id: int, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    """Delete an account owned by current user"""
     account = db.query(Account).filter(
         Account.id == account_id,
-        Account.user_id == current_user.id  
+        Account.user_id == current_user.id
     ).first()
     
     if not account:
