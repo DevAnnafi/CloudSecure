@@ -5,9 +5,6 @@ from sqlalchemy.orm import Session
 from api.core.database import get_db
 from api.models import Scan, Account, Finding
 from api.schemas.scan import ScanCreate, ScanResponse
-from src.scanners.aws import S3Scanner, IAMScanner, EC2MetaDataScanner
-from src.scanners.azure import AzureStorageScanner, AzureIAMScanner
-from src.scanners.gcp import GCPStorageScanner, GCPIAMScanner
 from src.core.report import ReportGenerator
 from datetime import datetime, timezone
 from typing import List
