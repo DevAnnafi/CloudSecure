@@ -72,11 +72,13 @@ def run_scan_task(scan_id: int, db: Session):
 def create_scan(scan_data: ScanCreate, background_tasks: BackgroundTasks, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
    account = db.query(Account).filter(
       Account.cloud_provider == scan_data.cloud_provider,
-      Account.account_id == scan_data.account_id
+      Account.account_id == scan_data.account_id,
+      Account.user_id == current_user.id
    ).first()
 
    if account is None:
       account = Account(
+         user_id=current_user.id, 
          cloud_provider=scan_data.cloud_provider,
          account_id=scan_data.account_id,
          account_name=scan_data.account_name,
