@@ -7,7 +7,7 @@ from scanners.aws.s3_checker import S3Scanner
 from scanners.aws.iam_enum import IAMScanner
 from scanners.aws.metadata import EC2MetaDataScanner
 from scanners.azure.storage_checker import StorageScanner
-from scanners.azure.iam_analyzer import IAMScanner as AzureIAMScanner
+from scanners.azure.iam_analyzer import AzureIAMScanner 
 from scanners.gcp.bucket_checker import BucketScanner
 from scanners.gcp.iam_scanner import IAMScanner as GCPIAMScanner
 
@@ -136,7 +136,17 @@ def test_aws_metadata_scanner_timeout():
         mock_sts = MagicMock()
         mock_sts.get_caller_identity.return_value = {'Account': '123456789012'}
         
-        mock_session.return_value.client.side_effect = lambda service: mock_sts if service == 'sts' else mock_iam
+        mock_cloudtrail = MagicMock()
+        
+        def client_factory(service, **kwargs):
+            if service == 'sts':
+                return mock_sts
+            elif service == 'cloudtrail':
+                return mock_cloudtrail
+            else:
+                return mock_iam
+        
+        mock_session.return_value.client = client_factory
         
         scanner = EC2MetaDataScanner(
             access_key=TEST_ACCESS_KEY,
