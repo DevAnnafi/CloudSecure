@@ -5,23 +5,20 @@ import json
 
 class IAMScanner():
     def __init__(self, service_account_json=None, project_id=None, account_name=None):
-        """
-        Initialize GCP IAM Scanner with service account credentials
-        
-        Args:
-            service_account_json: JSON string of service account key
-            project_id: GCP project ID
-            account_name: Account name for reporting
-        """
         self.findings = []
         self.project_id = project_id
         self.account_name = account_name or "Default"
         
         # Parse service account JSON and create credentials
-        if service_account_json:
-            sa_dict = json.loads(service_account_json)
-            credentials = service_account.Credentials.from_service_account_info(sa_dict)
-            self.projects_client = resourcemanager_v3.ProjectsClient(credentials=credentials)
+        if service_account_json and service_account_json.strip():  # Check not None and not empty
+            try:
+                sa_dict = json.loads(service_account_json)
+                credentials = service_account.Credentials.from_service_account_info(sa_dict)
+                self.projects_client = resourcemanager_v3.ProjectsClient(credentials=credentials)
+            except (json.JSONDecodeError, ValueError) as e:
+                print(f"Warning: Failed to parse service account JSON: {e}")
+                # Fallback to default credentials
+                self.projects_client = resourcemanager_v3.ProjectsClient()
         else:
             # Fallback to default credentials (for local testing)
             self.projects_client = resourcemanager_v3.ProjectsClient()
