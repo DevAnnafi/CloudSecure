@@ -83,6 +83,100 @@ def run_scan_task(scan_id: int, db: Session):
             for r in metadata_results:
                 print(f"  - {r['severity']}: {r['title']}")
             all_findings.extend(metadata_results)
+        
+        # ============= AZURE SCANNING =============
+        elif account.cloud_provider == "Azure":
+            print("Getting Azure credentials...")
+            tenant_id, client_id, client_secret, subscription_id = account.get_azure_credentials()
+            
+            if not all([tenant_id, client_id, client_secret, subscription_id]):
+                raise Exception("Azure credentials not configured for this account")
+            
+            print("Initializing Azure Storage Scanner...")
+            from src.scanners.azure.storage_checker import StorageScanner
+            storage_scanner = StorageScanner(
+                tenant_id=tenant_id,
+                client_id=client_id,
+                client_secret=client_secret,
+                subscription_id=subscription_id,
+                account_name=account.account_name
+            )
+            print("Running Azure Storage scan...")
+            storage_results = storage_scanner.scan()
+            print(f"Azure Storage Scanner found {len(storage_results)} findings")
+            all_findings.extend(storage_results)
+            
+            print("Initializing Azure IAM Scanner...")
+            from src.scanners.azure.iam_analyzer import AzureIAMScanner
+            iam_scanner = AzureIAMScanner(
+                tenant_id=tenant_id,
+                client_id=client_id,
+                client_secret=client_secret,
+                subscription_id=subscription_id,
+                account_name=account.account_name
+            )
+            print("Running Azure IAM scan...")
+            iam_results = iam_scanner.scan()
+            print(f"Azure IAM Scanner found {len(iam_results)} findings")
+            all_findings.extend(iam_results)
+            
+            print("Initializing Azure Metadata Probe...")
+            from src.scanners.azure.metadata_probe import MetaDataProbe
+            metadata_probe = MetaDataProbe(
+                tenant_id=tenant_id,
+                client_id=client_id,
+                client_secret=client_secret,
+                subscription_id=subscription_id,
+                account_name=account.account_name
+            )
+            print("Running Azure Metadata scan...")
+            metadata_results = metadata_probe.scan()
+            print(f"Azure Metadata Scanner found {len(metadata_results)} findings")
+            all_findings.extend(metadata_results)
+        
+        # ============= GCP SCANNING =============
+        elif account.cloud_provider == "GCP":
+            print("Getting GCP credentials...")
+            project_id, service_account_json = account.get_gcp_credentials()
+            
+            if not service_account_json:
+                raise Exception("GCP credentials not configured for this account")
+            
+            print("Initializing GCP Bucket Scanner...")
+            from src.scanners.gcp.bucket_checker import BucketScanner
+            bucket_scanner = BucketScanner(
+                service_account_json=service_account_json,
+                project_id=project_id,
+                account_name=account.account_name
+            )
+            print("Running GCP Bucket scan...")
+            bucket_results = bucket_scanner.scan()
+            print(f"GCP Bucket Scanner found {len(bucket_results)} findings")
+            all_findings.extend(bucket_results)
+            
+            print("Initializing GCP IAM Scanner...")
+            from src.scanners.gcp.iam_scanner import IAMScanner as GCPIAMScanner
+            iam_scanner = GCPIAMScanner(
+                service_account_json=service_account_json,
+                project_id=project_id,
+                account_name=account.account_name
+            )
+            print("Running GCP IAM scan...")
+            iam_results = iam_scanner.scan()
+            print(f"GCP IAM Scanner found {len(iam_results)} findings")
+            all_findings.extend(iam_results)
+            
+            print("Initializing GCP Metadata Scanner...")
+            from src.scanners.gcp.metadata_scanner import MetaDataScanner
+            metadata_scanner = MetaDataScanner(
+                service_account_json=service_account_json,
+                project_id=project_id,
+                account_name=account.account_name
+            )
+            print("Running GCP Metadata scan...")
+            metadata_results = metadata_scanner.scan()
+            print(f"GCP Metadata Scanner found {len(metadata_results)} findings")
+            all_findings.extend(metadata_results)
 
         print(f"\n=== TOTAL FINDINGS: {len(all_findings)} ===\n")
 
@@ -97,11 +191,10 @@ def run_scan_task(scan_id: int, db: Session):
                 cloud_provider=finding_data["cloud_provider"],
                 account_id_value=finding_data["account_id"],
                 account_name=finding_data["account_name"],
-                resource_id=finding_data.get("resource_id")  # May not exist in all findings
+                resource_id=finding_data.get("resource_id")
             )
             db.add(finding)   
 
-        from src.core.report import ReportGenerator
         report = ReportGenerator(all_findings, account.cloud_provider)
         report_dict = report.to_dict()
 
@@ -119,63 +212,9 @@ def run_scan_task(scan_id: int, db: Session):
         db.commit()
         
     except Exception as e:
-        print(f"❌ SCAN TASK FAILED: {e}")
+        print(f"SCAN TASK FAILED: {e}")
         import traceback
         traceback.print_exc()
-        scan = db.query(Scan).filter(Scan.id == scan_id).first()
-        if scan:
-            scan.status = "failed"
-            db.commit()
-        
-        # ============= AZURE SCANNING =============
-        elif account.cloud_provider == "Azure":
-            tenant_id, client_id, client_secret, subscription_id = account.get_azure_credentials()
-            
-            if not all([tenant_id, client_id, client_secret, subscription_id]):
-                raise Exception("Azure credentials not configured for this account")
-            
-            storage_scanner = AzureStorageScanner(tenant_id, client_id, client_secret, subscription_id)
-            all_findings.extend(storage_scanner.scan())
-        
-        # ============= GCP SCANNING =============
-        elif account.cloud_provider == "GCP":
-            project_id, service_account_json = account.get_gcp_credentials()
-            
-            if not service_account_json:
-                raise Exception("GCP credentials not configured for this account")
-            
-            storage_scanner = GCPStorageScanner(service_account_json, project_id)
-            all_findings.extend(storage_scanner.scan())
-
-        # Store findings (same as before)
-        for finding_data in all_findings:
-            finding = Finding(
-                scan_id=scan.id,
-                severity=finding_data["severity"],
-                title=finding_data["title"],
-                resource=finding_data["resource"],
-                description=finding_data["description"],
-                cloud_provider=finding_data["cloud_provider"],
-                account_id_value=finding_data["account_id"],
-                account_name=finding_data["account_name"]
-            )
-            db.add(finding)   
-
-        report = ReportGenerator(all_findings, account.cloud_provider)
-        report_dict = report.to_dict()
-
-        scan.overall_score = report_dict["posture"]["overall_score"]
-        scan.total_findings = len(all_findings)
-        scan.critical_count = len([f for f in all_findings if f["severity"] == "critical"])
-        scan.high_count = len([f for f in all_findings if f["severity"] == "high"])
-        scan.medium_count = len([f for f in all_findings if f["severity"] == "medium"])
-        scan.low_count = len([f for f in all_findings if f["severity"] == "low"])
-        scan.status = "completed"
-        scan.completed_at = datetime.now(timezone.utc)
-        db.commit()
-        
-    except Exception as e:
-        print("Scan task failed:", e)
         scan = db.query(Scan).filter(Scan.id == scan_id).first()
         if scan:
             scan.status = "failed"
