@@ -3,13 +3,13 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent.parent.parent / "src"))
 import pytest
 from unittest.mock import patch, MagicMock
-from scanners.aws.s3_checker import S3Scanner
-from scanners.aws.iam_enum import IAMScanner
-from scanners.aws.metadata import EC2MetaDataScanner
-from scanners.azure.storage_checker import StorageScanner
-from scanners.azure.iam_analyzer import AzureIAMScanner 
-from scanners.gcp.bucket_checker import BucketScanner
-from scanners.gcp.iam_scanner import IAMScanner as GCPIAMScanner
+from src.scanners.aws.s3_checker import S3Scanner
+from src.scanners.aws.iam_enum import IAMScanner
+from src.scanners.aws.metadata import EC2MetaDataScanner
+from src.scanners.azure.storage_checker import StorageScanner
+from src.scanners.azure.iam_analyzer import AzureIAMScanner 
+from src.scanners.gcp.bucket_checker import BucketScanner
+from src.scanners.gcp.iam_scanner import IAMScanner as GCPIAMScanner
 
 # Test credentials
 TEST_ACCESS_KEY = "AKIAIOSFODNN7EXAMPLE"
