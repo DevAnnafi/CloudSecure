@@ -3,24 +3,28 @@ import json
 from src.core.enums import Severity, CloudProvider, FindingType
 from botocore.exceptions import ProfileNotFound
 
-class S3Scanner():  
-    def __init__(self, profile_name=None, account_name=None):
-        self.findings = []
-        self.account_name = account_name or "Default"
+class S3Scanner:
+    def __init__(self, access_key: str, secret_key: str, region: str, account_name: str):
+        """Initialize S3 scanner with credentials"""
+        self.account_name = account_name
+        self.region = region
+        self.findings = []  # ✅ INITIALIZE FINDINGS!
         
-        try:
-            session = boto3.Session(profile_name=profile_name) if profile_name else boto3.Session()
-        except ProfileNotFound:
-            session = boto3.Session(profile_name="default")
-        self.s3_client = session.client('s3')
+        # Create boto3 session with provided credentials
+        self.session = boto3.Session(
+            aws_access_key_id=access_key,
+            aws_secret_access_key=secret_key,
+            region_name=region
+        )
         
-        sts_client = session.client('sts')
+        self.s3_client = self.session.client('s3')
+        
+        # Get account ID
         try:
-            identity = sts_client.get_caller_identity()
-            self.account_id = identity['Account']
-        except:
+            sts_client = self.session.client('sts')
+            self.account_id = sts_client.get_caller_identity()['Account']
+        except Exception:
             self.account_id = "unknown"
-
 
     def scan_buckets(self):
         try:
@@ -32,8 +36,8 @@ class S3Scanner():
                 self.check_acl(bucket_name)
                 self.check_policy(bucket_name)
                 self.check_encryption(bucket_name)
-        except:
-            pass
+        except Exception as e:
+            print(f"S3 scan error: {e}")
 
         return self.findings
 
@@ -46,24 +50,27 @@ class S3Scanner():
                         config['BlockPublicPolicy'],
                         config['RestrictPublicBuckets']]):
                 self.findings.append({
-                    "severity" : Severity.CRITICAL.value,
-                    "title" : "S3 Bucket Not Protected",
-                    "resource" : bucket_name,
+                    "severity": Severity.CRITICAL.value,
+                    "title": "S3 Bucket Not Protected",
+                    "resource": bucket_name,
                     "cloud_provider": "AWS",              
                     "account_id": self.account_id,        
                     "account_name": self.account_name,    
-                    "description" : "Block Public Access settings are not fully enabled"
+                    "description": "Block Public Access settings are not fully enabled",
+                    "resource_id": f"s3://{bucket_name}"
                 })
-        except:
+        except Exception:
+            # No public access block = public!
             self.findings.append({
-                    "severity" : Severity.CRITICAL.value,
-                    "title" : "S3 Bucket Not Protected",
-                    "resource" : bucket_name,
-                    "cloud_provider": "AWS",              
-                    "account_id": self.account_id,        
-                    "account_name": self.account_name, 
-                    "description" : "Block Public Access settings are not fully enabled"
-                })
+                "severity": Severity.CRITICAL.value,
+                "title": "S3 Bucket Not Protected",
+                "resource": bucket_name,
+                "cloud_provider": "AWS",              
+                "account_id": self.account_id,        
+                "account_name": self.account_name, 
+                "description": "Block Public Access settings are not configured",
+                "resource_id": f"s3://{bucket_name}"
+            })
 
     def check_acl(self, bucket_name):
         try:
@@ -75,16 +82,18 @@ class S3Scanner():
                     uri = grant['Grantee']['URI']
                     if 'AllUsers' in uri or 'AuthenticatedUsers' in uri:
                         self.findings.append({
-                            "severity" : Severity.CRITICAL.value,
-                            "title" : "Public S3 Bucket via ACL",
-                            "resource" : bucket_name,
+                            "severity": Severity.CRITICAL.value,
+                            "title": "Public S3 Bucket via ACL",
+                            "resource": bucket_name,
                             "cloud_provider": "AWS",              
                             "account_id": self.account_id,        
                             "account_name": self.account_name, 
-                            "description" : "Bucket ACL grants public access"
+                            "description": "Bucket ACL grants public access",
+                            "resource_id": f"s3://{bucket_name}"
                         })
-        except: 
-              pass
+                        break
+        except Exception as e:
+            print(f"ACL check error for {bucket_name}: {e}")
 
     def check_policy(self, bucket_name):
         try:
@@ -94,31 +103,31 @@ class S3Scanner():
             for statement in statements:
                 if statement["Effect"] == 'Allow' and (statement['Principal'] == '*' or statement['Principal'] == {'AWS': '*'}):
                     self.findings.append({
-                        "severity" : Severity.CRITICAL.value,
-                        "title" : "Public S3 Bucket via Policy",
-                        "resource" : bucket_name,
+                        "severity": Severity.CRITICAL.value,
+                        "title": "Public S3 Bucket via Policy",
+                        "resource": bucket_name,
                         "cloud_provider": "AWS",              
                         "account_id": self.account_id,        
                         "account_name": self.account_name, 
-                        "description" : "Bucket policy grants public access"
+                        "description": "Bucket policy grants public access",
+                        "resource_id": f"s3://{bucket_name}"
                     })
-        except:
+                    break
+        except Exception as e:
+            # No policy is fine
             pass
 
     def check_encryption(self, bucket_name):
         try:
-             self.s3_client.get_bucket_encryption(Bucket=bucket_name)
-        except:
+            self.s3_client.get_bucket_encryption(Bucket=bucket_name)
+        except Exception:
             self.findings.append({
-                "severity" : Severity.HIGH.value,
-                "title" : "S3 Bucket Encryption Disabled",
-                "resource" : bucket_name,
+                "severity": Severity.HIGH.value,
+                "title": "S3 Bucket Encryption Disabled",
+                "resource": bucket_name,
                 "cloud_provider": "AWS",              
                 "account_id": self.account_id,        
                 "account_name": self.account_name, 
-                "description": "Bucket does not have default encryption enabled"
+                "description": "Bucket does not have default encryption enabled",
+                "resource_id": f"s3://{bucket_name}"
             })
-
-    
-        
-
